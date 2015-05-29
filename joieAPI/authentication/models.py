@@ -10,6 +10,8 @@ class AccountManager(BaseUserManager):
         """
         this method will expose to API
         """
+        print '-------------------------username:' + kwargs.get('username')
+        print '-------------------------email:' + email
         if not email:
             raise ValueError('Users must have a valid email address.')
 
@@ -17,7 +19,7 @@ class AccountManager(BaseUserManager):
             raise ValueError('Users must have a valid username.')
 
         account = self.model(
-            email=self.normalize_email(email), username=kwargs.get('username'), **kwargs)
+            email=self.normalize_email(email), **kwargs)
 
         account.set_password(password)
         account.save()
@@ -50,15 +52,12 @@ class Account(AbstractBaseUser):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=40, unique=True)
 
-    first_name = models.CharField(max_length=40, blank=True)
-    last_name = models.CharField(max_length=40, blank=True)
-
     is_admin = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     app_user_type_choices = (('Employer', 'Employer'), ('Employee', 'Employee'))
-    app_user_type = models.CharField(choices=app_user_type_choices, blank=True, max_length=10)
+    app_user_type = models.CharField(choices=app_user_type_choices, blank=True, null=True, max_length=10)
     is_active = models.BooleanField(default=False,
                                      help_text=('Designates whether this user should be treated as active.'
                                                 'Unselect this instead of deleting accounts.'))
@@ -68,32 +67,35 @@ class Account(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'app_user_type']
 
+    class Meta:
+        ordering = ('created_at',)
+
     def __unicode__(self):
         return self.email
 
     def get_full_name(self):
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        return full_name.strip()
+
+        return self.username
 
     def get_short_name(self):
-        return self.first_name
+        return self.username
 
 
 class EmployerProfile(models.Model):
-    user = models.OneToOneField(Account, primary_key=True, related_name='profile')
+    user = models.OneToOneField(Account, primary_key=True, related_name='employer_profile')
 
     company_name = models.CharField(max_length=100, blank=True)
     roc_number = models.CharField(max_length=40, blank=True)
     business_type_choices = (('Direct', 'Direct'), ('Agency', 'Agency'))
     business_type = models.CharField(choices=business_type_choices, blank=True, max_length=10)
     company_address = models.CharField(max_length=100, blank=True)
-    company_postal_code = models.IntegerField(blank=True)
+    company_postal_code = models.IntegerField(blank=True, null=True)
     company_description = models.CharField(max_length=100, blank=True)
     company_contact_person = models.CharField(max_length=40, blank=True)
     company_contact_detail = models.CharField(max_length=100, blank=True)
     company_logo = models.ImageField(upload_to='static/logo/', max_length=100, blank=True)
     # optional payment details
-    credit_amount = models.IntegerField(blank=True)
+    credit_amount = models.IntegerField(blank=True, null=True)
     card_type = models.CharField(max_length=20, blank=True)
     card_number = models.CharField(max_length=20, blank=True)
     name_on_card = models.CharField(max_length=20, blank=True)
@@ -137,7 +139,7 @@ class EmployerProfile(models.Model):
 
 
 class EmployeeProfile(models.Model):
-    user = models.OneToOneField(Account, primary_key=True, related_name='profile')
+    user = models.OneToOneField(Account, primary_key=True, related_name='employee_profile')
 
     nric_num = models.CharField(max_length=20, blank=True)
     name_on_nric = models.CharField(max_length=40, blank=True)
@@ -152,6 +154,9 @@ class EmployeeProfile(models.Model):
     block_building = models.CharField(max_length=20, blank=True)
     street_name = models.CharField(max_length=20, blank=True)
     unit_number = models.CharField(max_length=20, blank=True)
+    postal_code = models.IntegerField(blank=True, null=True)
+
+    bank_number = models.CharField(max_length=20, blank=True)
     branch_number = models.CharField(max_length=20, blank=True)
     account_number = models.CharField(max_length=10, blank=True)
 
@@ -170,7 +175,6 @@ class EmployeeProfile(models.Model):
 
     first_time_sign_in = models.BooleanField(default=False)
     last_edited_by = models.CharField(max_length=40)
-
 
 
     def __unicode__(self):

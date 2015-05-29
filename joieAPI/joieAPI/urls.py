@@ -14,16 +14,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.conf.urls import include, url
-from django.contrib import admin
-from rest_framework import routers
-from authentication.views import AccountViewSet
+# from django.contrib import admin
+# from rest_framework import routers
+from authentication import views
+from rest_framework.urlpatterns import format_suffix_patterns
 
-
-router = routers.SimpleRouter()
-router.register(r'accounts', AccountViewSet)
 
 urlpatterns = [
     # url(r'^admin/', include(admin.site.urls)),
-    url(r'^api/', include(router.urls)),
+    # url(r'^api/', include(router.urls)),
     url(r'^auth/', include('djoser.urls')),
+    url(r'^employer/$', views.EmployerList.as_view()),
+    url(r'^employer/(?P<pk>[0-9]+)/$', views.EmployerDetail.as_view()),
+    url(r'^employee/$', views.EmployeeList.as_view()),
+    url(r'^employee/(?P<pk>[0-9]+)/$', views.EmployeeDetail.as_view()),
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)
