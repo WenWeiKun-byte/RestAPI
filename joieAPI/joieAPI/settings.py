@@ -135,3 +135,7 @@ if DEBUG:
     EMAIL_USE_TLS = True
     EMAIL_HOST_USER = 'wenweikun@gmail.com'
     EMAIL_HOST_PASSWORD = 'zpyzqvuhxjapqsot'
+
+TEMPLATE_DIRS = (
+    os.path.join(os.path.dirname(__file__), 'templates').replace('\\','/'),
+)
