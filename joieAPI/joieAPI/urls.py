@@ -24,9 +24,9 @@ urlpatterns = [
     # url(r'^admin/', include(admin.site.urls)),
     # url(r'^api/', include(router.urls)),
     url(r'^auth/', include('djoser.urls')),
-    url(r'^employer/$', views.EmployerList.as_view()),
+    url(r'^employers/$', views.EmployerList.as_view()),
     url(r'^employer/(?P<pk>[0-9]+)/$', views.EmployerDetail.as_view()),
-    url(r'^employee/$', views.EmployeeList.as_view()),
+    url(r'^employees/$', views.EmployeeList.as_view()),
     url(r'^employee/(?P<pk>[0-9]+)/$', views.EmployeeDetail.as_view()),
 ]
 

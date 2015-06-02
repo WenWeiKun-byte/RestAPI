@@ -58,7 +58,7 @@ class Account(AbstractBaseUser):
     updated_at = models.DateTimeField(auto_now=True)
     app_user_type_choices = (('Employer', 'Employer'), ('Employee', 'Employee'))
     app_user_type = models.CharField(choices=app_user_type_choices, blank=True, null=True, max_length=10)
-    is_active = models.BooleanField(default=False,
+    is_active = models.BooleanField(default=True,
                                      help_text=('Designates whether this user should be treated as active.'
                                                 'Unselect this instead of deleting accounts.'))
     is_staff = models.BooleanField(default=False)

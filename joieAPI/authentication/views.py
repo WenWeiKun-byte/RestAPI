@@ -5,7 +5,7 @@ from .serializers import EmployerSerializer, EmployeeSerializer
 from .models import Account
 
 
-class EmployerList(generics.ListCreateAPIView):
+class EmployerList(generics.ListAPIView):
     queryset = Account.objects.all()
     serializer_class = EmployerSerializer
 
@@ -15,7 +15,7 @@ class EmployerDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EmployerSerializer
 
 
-class EmployeeList(generics.ListCreateAPIView):
+class EmployeeList(generics.ListAPIView):
     queryset = Account.objects.all()
     serializer_class = EmployeeSerializer
 

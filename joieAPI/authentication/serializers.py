@@ -16,6 +16,8 @@ class EmployerProfileSerializer(serializers.HyperlinkedModelSerializer):
                   'facebook', 'twitter', 'instagram',
                   'status', 'first_time_sign_in', 'last_edited_by')
         read_only_fields = ('first_time_sign_in', 'last_edited_by',)
+        extra_kwargs = {'facebook': {'required': False},
+                        'status': {'read_only': True}}
 
 
 class EmployeeProfileSerializer(serializers.HyperlinkedModelSerializer):

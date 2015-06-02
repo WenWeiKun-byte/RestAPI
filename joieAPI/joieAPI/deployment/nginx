@@ -1,0 +1,19 @@
+server {
+    listen  80;
+    server_name 121.43.235.89;
+    access_log /var/log/nginx/joie.access.log;
+    error_log /var/log/nginx/joie.error.log;
+
+    location / {
+        uwsgi_pass  unix:///tmp/joie.sock;
+        include     uwsgi_params;
+    }
+
+    location /media/  {
+        alias /home/django/www/RestAPI/media/;
+    }
+
+    location  /static/ {
+        alias /home/django/www/RestAPI/static/;
+    }
+}
