@@ -82,7 +82,7 @@ class Account(AbstractBaseUser):
 
 
 class EmployerProfile(models.Model):
-    user = models.OneToOneField(Account, primary_key=True, related_name='employer_profile')
+    user = models.OneToOneField(Account, related_name='employer_profile')
 
     company_name = models.CharField(max_length=100, blank=True)
     roc_number = models.CharField(max_length=40, blank=True)
@@ -139,7 +139,7 @@ class EmployerProfile(models.Model):
 
 
 class EmployeeProfile(models.Model):
-    user = models.OneToOneField(Account, primary_key=True, related_name='employee_profile')
+    user = models.OneToOneField(Account, related_name='employee_profile')
 
     nric_num = models.CharField(max_length=20, blank=True)
     name_on_nric = models.CharField(max_length=40, blank=True)

@@ -15,19 +15,21 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 # from django.contrib import admin
-# from rest_framework import routers
+from rest_framework.routers import DefaultRouter
 from authentication import views
 from rest_framework.urlpatterns import format_suffix_patterns
+
+
+# Create a router and register our viewsets with it.
+router = DefaultRouter()
+router.register(r'employers', views.EmployerViewSet)
+router.register(r'employees', views.EmployeeViewSet)
 
 
 urlpatterns = [
     # url(r'^admin/', include(admin.site.urls)),
     # url(r'^api/', include(router.urls)),
+    url(r'^', include(router.urls)),
     url(r'^auth/', include('djoser.urls')),
-    url(r'^employers/$', views.EmployerList.as_view()),
-    url(r'^employer/(?P<pk>[0-9]+)/$', views.EmployerDetail.as_view()),
-    url(r'^employees/$', views.EmployeeList.as_view()),
-    url(r'^employee/(?P<pk>[0-9]+)/$', views.EmployeeDetail.as_view()),
 ]
 
-urlpatterns = format_suffix_patterns(urlpatterns)
