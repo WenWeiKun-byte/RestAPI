@@ -66,8 +66,10 @@ class EmployerViewSet(NoCreateViewSet):
                      instance.company_contact_detail is not '',
                      instance.company_logo is not '',
                      ]
-        if all(checklist):
+        if instance.status == '1' and all(checklist):
             serializer.save(status='2')  # completed Profile
+        if instance.status == '2' and not all(checklist):
+            serializer.save(status='1')  # completed Profile
 
 
 
@@ -98,5 +100,7 @@ class EmployeeViewSet(NoCreateViewSet):
                      instance.branch_number is not '',
                      instance.account_number is not '',
                      ]
-        if all(checklist):
+        if instance.status == '1' and all(checklist):
             serializer.save(status='2')  # completed Profile
+        if instance.status == '2' and not all(checklist):
+            serializer.save(status='1')  # completed Profile
