@@ -10,8 +10,6 @@ class AccountManager(BaseUserManager):
         """
         this method will expose to API
         """
-        print '-------------------------username:' + kwargs.get('username')
-        print '-------------------------email:' + email
         if not email:
             raise ValueError('Users must have a valid email address.')
 
@@ -88,6 +86,7 @@ class EmployerProfile(models.Model):
     roc_number = models.CharField(max_length=40, blank=True)
     business_type_choices = (('Direct', 'Direct'), ('Agency', 'Agency'))
     business_type = models.CharField(choices=business_type_choices, blank=True, max_length=10)
+    ea_number = models.CharField(max_length=40, blank=True)
     company_address = models.CharField(max_length=100, blank=True)
     company_postal_code = models.IntegerField(blank=True, null=True)
     company_description = models.CharField(max_length=100, blank=True)
@@ -112,12 +111,10 @@ class EmployerProfile(models.Model):
     instagram = models.CharField(max_length=40, blank=True)
 
     status_choices = (('0', 'Black Listed'), ('1', 'Inactive'), ('2', 'completed Profile'), ('3', 'Special Type A'))
-    status = models.CharField(choices=status_choices,  max_length=20)
+    status = models.CharField(choices=status_choices,  max_length=20, default='1')
 
     first_time_sign_in = models.BooleanField(default=False)
     last_edited_by = models.CharField(max_length=40)
-
-
 
     def __unicode__(self):
         return self.user.username
@@ -171,7 +168,7 @@ class EmployeeProfile(models.Model):
     instagram = models.CharField(max_length=40, blank=True)
 
     status_choices = (('0', 'Black Listed'), ('1', 'Inactive'), ('2', 'completed Profile'))
-    status = models.CharField(choices=status_choices,  max_length=20)
+    status = models.CharField(choices=status_choices,  max_length=20, default='1')
 
     first_time_sign_in = models.BooleanField(default=False)
     last_edited_by = models.CharField(max_length=40)

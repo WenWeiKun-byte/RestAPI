@@ -1,13 +1,13 @@
 from rest_framework import generics
 from rest_framework import viewsets
-from rest_framework.response import Response
+from rest_framework import mixins
 
 from .serializers import EmployerSerializer, EmployeeSerializer
 from .models import EmployerProfile, EmployeeProfile
 
 
 # class EmployerList(generics.ListAPIView):
-#     queryset = Account.objects.all()
+# queryset = Account.objects.all()
 #     serializer_class = EmployerSerializer
 #
 #
@@ -25,7 +25,23 @@ from .models import EmployerProfile, EmployeeProfile
 #     queryset = Account.objects.all()
 #     serializer_class = EmployeeSerializer
 # =============use viewset
-class EmployerViewSet(viewsets.ModelViewSet):
+
+
+class NoCreateViewSet(mixins.ListModelMixin,
+                      mixins.DestroyModelMixin,
+                      mixins.RetrieveModelMixin,
+                      mixins.UpdateModelMixin,
+                      viewsets.GenericViewSet):
+    """
+    A viewset that provides without 'create' actions.
+
+    To use it, override the class and set the `.queryset` and
+    `.serializer_class` attributes.
+    """
+    pass
+
+
+class EmployerViewSet(NoCreateViewSet):
     """
     This viewset automatically provides `list` and `detail` actions.
     """
@@ -38,10 +54,49 @@ class EmployerViewSet(viewsets.ModelViewSet):
     queryset = EmployerProfile.objects.all()
     serializer_class = EmployerSerializer
 
+    def perform_update(self, serializer):
+        user = self.request.user
+        instance = serializer.save(last_edited_by=user.email)
+        checklist = [instance.company_name is not '',
+                     instance.roc_number is not '',
+                     instance.business_type is not '',
+                     instance.company_address is not '',
+                     instance.company_postal_code is not None,
+                     instance.company_contact_person is not '',
+                     instance.company_contact_detail is not '',
+                     instance.company_logo is not '',
+                     ]
+        if all(checklist):
+            serializer.save(status='2')  # completed Profile
 
-class EmployeeViewSet(viewsets.ModelViewSet):
+
+
+
+class EmployeeViewSet(NoCreateViewSet):
     """
     This viewset automatically provides `list` and `detail` actions.
     """
     queryset = EmployeeProfile.objects.all()
     serializer_class = EmployeeSerializer
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        instance = serializer.save(last_edited_by=user.email)
+        checklist = [instance.nric_num is not '',
+                     instance.name_on_nric is not '',
+                     instance.nric_type is not '',
+                     instance.date_of_birth is not '',
+                     instance.preferred_name is not None,
+                     instance.photo is not '',
+                     instance.gender is not '',
+                     instance.contact_number is not '',
+                     instance.block_building is not '',
+                     instance.street_name is not '',
+                     instance.unit_number is not '',
+                     instance.postal_code is not None,
+                     instance.bank_number is not '',
+                     instance.branch_number is not '',
+                     instance.account_number is not '',
+                     ]
+        if all(checklist):
+            serializer.save(status='2')  # completed Profile
