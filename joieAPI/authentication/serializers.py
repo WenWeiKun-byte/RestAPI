@@ -42,6 +42,7 @@ class EmployerSerializer(serializers.HyperlinkedModelSerializer):
         instance.company_description = validated_data.get('company_description', instance.company_description)
         instance.company_contact_person = validated_data.get('company_contact_person', instance.company_contact_person)
         instance.company_contact_detail = validated_data.get('company_contact_detail', instance.company_contact_detail)
+        instance.company_logo = validated_data.get('company_logo', instance.company_logo)
 
         instance.credit_amount = validated_data.get('credit_amount', instance.credit_amount)
         instance.card_type = validated_data.get('card_type', instance.card_type)

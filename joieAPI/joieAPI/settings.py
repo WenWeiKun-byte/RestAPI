@@ -108,7 +108,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
 STATIC_ROOT = "/home/django/www/RestAPI/static/"
+MEDIA_ROOT = "/home/django/www/RestAPI/media/"
 
 AUTH_USER_MODEL = 'authentication.Account'
 

@@ -92,7 +92,7 @@ class EmployerProfile(models.Model):
     company_description = models.CharField(max_length=100, blank=True)
     company_contact_person = models.CharField(max_length=40, blank=True)
     company_contact_detail = models.CharField(max_length=100, blank=True)
-    company_logo = models.ImageField(upload_to='static/logo/', max_length=100, blank=True)
+    company_logo = models.ImageField(upload_to='logo', max_length=100, blank=True)
     # optional payment details
     credit_amount = models.IntegerField(blank=True, null=True)
     card_type = models.CharField(max_length=20, blank=True)
@@ -144,7 +144,7 @@ class EmployeeProfile(models.Model):
     nric_type = models.CharField(choices=nric_type_choices, blank=True, max_length=20)
     date_of_birth = models.DateField(blank=True, null=True)
     preferred_name = models.CharField(max_length=40, blank=True)
-    photo = models.ImageField(upload_to='static/photo/', max_length=100, blank=True)
+    photo = models.ImageField(upload_to='photos', max_length=100, blank=True)
     gender = models.CharField(max_length=20, blank=True)
 
     contact_number = models.CharField(max_length=20, blank=True)

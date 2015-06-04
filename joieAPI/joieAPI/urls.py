@@ -14,6 +14,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.conf.urls import include, url
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from authentication import views
 
@@ -27,5 +29,5 @@ router.register(r'employees', views.EmployeeViewSet)
 urlpatterns = [
     url(r'^auth/', include('djoser.urls')),
     url(r'^', include(router.urls)),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
