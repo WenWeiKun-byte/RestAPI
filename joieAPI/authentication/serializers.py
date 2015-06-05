@@ -9,8 +9,8 @@ class AccountSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Account
-        fields = ('id', 'email', 'username', 'created_at', 'updated_at', 'app_user_type', )
-        read_only_fields = ('email', 'created_at', 'updated_at', 'app_user_type')
+        fields = ('id', 'email', 'username', 'created_at', 'updated_at', 'last_login', 'app_user_type', )
+        read_only_fields = ('email', 'created_at', 'updated_at', 'last_login', 'app_user_type')
 
 
 class EmployerSerializer(serializers.HyperlinkedModelSerializer):

@@ -183,11 +183,11 @@ class EmployeeProfile(models.Model):
             user = instance
             if not user.is_staff:
                 if user.app_user_type == 'Employee':
-                    EmployerProfile.objects.get_or_create(user=instance)
+                    EmployeeProfile.objects.get_or_create(user=instance)
 
     @receiver(pre_delete, sender=Account)
     def delete_profile_for_user(sender, instance=None, **kwargs):
         if instance:
-            if EmployerProfile.objects.get(user=instance):
-                user_profile = EmployerProfile.objects.get(user=instance)
+            if EmployeeProfile.objects.get(user=instance):
+                user_profile = EmployeeProfile.objects.get(user=instance)
                 user_profile.delete()

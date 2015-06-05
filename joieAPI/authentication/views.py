@@ -1,4 +1,5 @@
-from rest_framework import generics
+import django_filters
+from rest_framework import filters
 from rest_framework import viewsets
 from rest_framework import mixins
 
@@ -53,6 +54,10 @@ class EmployerViewSet(NoCreateViewSet):
     #     return Response(serializer.data)
     queryset = EmployerProfile.objects.all()
     serializer_class = EmployerSerializer
+
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter, )
+    filter_fields = ('status', 'user__username')
+    search_fields = ('user__username', 'user__email')
 
     def perform_update(self, serializer):
         user = self.request.user
