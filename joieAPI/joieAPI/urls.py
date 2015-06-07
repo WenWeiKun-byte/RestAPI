@@ -28,6 +28,7 @@ router.register(r'employees', views.EmployeeViewSet)
 
 urlpatterns = [
     url(r'^auth/', include('djoser.urls')),
+    url(r'^auth/frontend/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9]+)', views.activate),
     url(r'^', include(router.urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

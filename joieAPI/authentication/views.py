@@ -1,4 +1,4 @@
-import django_filters
+from django.http import HttpResponse
 from rest_framework import filters
 from rest_framework import viewsets
 from rest_framework import mixins
@@ -26,6 +26,9 @@ from .models import EmployerProfile, EmployeeProfile
 #     queryset = Account.objects.all()
 #     serializer_class = EmployeeSerializer
 # =============use viewset
+
+def activate(request, uid, token):
+    return HttpResponse("the uid is %s, and the token is %s" % (uid, token))
 
 
 class NoCreateViewSet(mixins.ListModelMixin,
@@ -75,8 +78,6 @@ class EmployerViewSet(NoCreateViewSet):
             serializer.save(status='2')  # completed Profile
         if instance.status == '2' and not all(checklist):
             serializer.save(status='1')  # completed Profile
-
-
 
 
 class EmployeeViewSet(NoCreateViewSet):
