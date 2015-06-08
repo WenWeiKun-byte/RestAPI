@@ -1,7 +1,9 @@
+import json
 from django.http import HttpResponse
 from rest_framework import filters
 from rest_framework import viewsets
 from rest_framework import mixins
+from rest_framework.test import APIClient
 
 from .serializers import EmployerSerializer, EmployeeSerializer
 from .models import EmployerProfile, EmployeeProfile
@@ -28,7 +30,13 @@ from .models import EmployerProfile, EmployeeProfile
 # =============use viewset
 
 def activate(request, uid, token):
-    return HttpResponse("the uid is %s, and the token is %s" % (uid, token))
+    client = APIClient(enforce_csrf_checks=True)
+    response = client.post('/auth/activate/', {'uid': uid, 'token': token})
+    r = json.loads(response.content)
+    if 'auth_token' in r.keys():
+        return HttpResponse('account activated')
+    else:
+        return HttpResponse('account activated fail')
 
 
 class NoCreateViewSet(mixins.ListModelMixin,
