@@ -121,7 +121,10 @@ REST_FRAMEWORK = {
         # 'rest_framework.authentication.TokenAuthentication',
         'authentication.authentication.TokenAuth',
     ),
-    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',)
+    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ),
 }
 
 DJOSER = {

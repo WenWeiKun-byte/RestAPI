@@ -27,6 +27,7 @@ router.register(r'employees', views.EmployeeViewSet)
 
 
 urlpatterns = [
+    url(r'^auth/me/$', views.UserView.as_view(), name='user'),
     url(r'^auth/', include('djoser.urls')),
     url(r'^auth/frontend/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', views.activate),
     url(r'^', include(router.urls)),

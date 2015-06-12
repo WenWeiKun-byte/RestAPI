@@ -60,6 +60,9 @@ class Account(AbstractBaseUser):
                                      help_text=('Designates whether this user should be treated as active.'
                                                 'Unselect this instead of deleting accounts.'))
     is_staff = models.BooleanField(default=False)
+    first_time_sign_in = models.BooleanField(default=False)
+    last_edited_by = models.CharField(max_length=40)
+
     objects = AccountManager()
 
     USERNAME_FIELD = 'email'
@@ -113,8 +116,7 @@ class EmployerProfile(models.Model):
     status_choices = (('0', 'Black Listed'), ('1', 'Inactive'), ('2', 'completed Profile'), ('3', 'Special Type A'))
     status = models.CharField(choices=status_choices,  max_length=20, default='1')
 
-    first_time_sign_in = models.BooleanField(default=False)
-    last_edited_by = models.CharField(max_length=40)
+
 
     def __unicode__(self):
         return self.user.username
@@ -169,10 +171,6 @@ class EmployeeProfile(models.Model):
 
     status_choices = (('0', 'Black Listed'), ('1', 'Inactive'), ('2', 'completed Profile'))
     status = models.CharField(choices=status_choices,  max_length=20, default='1')
-
-    first_time_sign_in = models.BooleanField(default=False)
-    last_edited_by = models.CharField(max_length=40)
-
 
     def __unicode__(self):
         return self.user.username
