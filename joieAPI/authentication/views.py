@@ -7,7 +7,8 @@ from rest_framework.test import APIClient
 from rest_framework.exceptions import PermissionDenied
 
 from .serializers import Employee_For_Admin_Serializer, Employee_For_Staff_Serializer, AccountSerializer, \
-    Employer_For_Admin_Serializer, Employer_For_Staff_Serializer, Account_Employee_Serializer, Account_Employer_Serializer
+    Employer_For_Admin_Serializer, Employer_For_Staff_Serializer, Account_Employee_Serializer, \
+    Account_Employer_Serializer, StaffRegistrationSerializer
 from .models import EmployerProfile, EmployeeProfile, Account
 from .permissions import IsAdmin, IsStaff
 
@@ -86,7 +87,9 @@ class EmployerViewSet(NoCreateViewSet):
 
     def perform_update(self, serializer):
         user = self.request.user
-        instance = serializer.save(last_edited_by=user.email)
+        instance = serializer.save()
+        instance.user.last_edited_by = user.email
+        serializer.save()
         checklist = [instance.company_name is not '',
                      instance.roc_number is not '',
                      instance.business_type is not '',
@@ -122,7 +125,9 @@ class EmployeeViewSet(NoCreateViewSet):
 
     def perform_update(self, serializer):
         user = self.request.user
-        instance = serializer.save(last_edited_by=user.email)
+        instance = serializer.save()
+        instance.user.last_edited_by = user.email
+        serializer.save()
         checklist = [instance.nric_num is not '',
                      instance.name_on_nric is not '',
                      instance.nric_type is not '',
@@ -166,10 +171,7 @@ class UserView(generics.RetrieveUpdateAPIView):
 
     def perform_update(self, serializer):
         user = self.request.user
-        print '-----------%s' % user.email
         instance = serializer.save(last_edited_by=user.email)
-        print 'b4 update'
-        print instance.employer_profile.status
         if user.app_user_type == 'Employee':
             checklist = [instance.employee_profile.nric_num is not '',
                          instance.employee_profile.name_on_nric is not '',
@@ -185,9 +187,11 @@ class UserView(generics.RetrieveUpdateAPIView):
                          instance.employee_profile.postal_code is not None,
                          ]
             if instance.employee_profile.status == '1' and all(checklist):
-                serializer.save(employee_profile__status='2')  # completed Profile
+                instance.employer_profile.status = '2'
+                serializer.save()  # completed Profile
             if instance.employee_profile.status == '2' and not all(checklist):
-                serializer.save(employee_profile__status='1')  # completed Profile
+                instance.employer_profile.status = '1'
+                serializer.save()  # completed Profile
         if user.app_user_type == 'Employer':
             checklist = [instance.employer_profile.company_name is not '',
                          instance.employer_profile.roc_number is not '',
@@ -199,13 +203,20 @@ class UserView(generics.RetrieveUpdateAPIView):
                          instance.employer_profile.company_logo is not '',
                          ]
             if instance.employer_profile.status == '1' and all(checklist):
-                print 'i am in '
-                print serializer
                 instance.employer_profile.status = '2'
                 serializer.save()  # completed Profile
-                print instance.employer_profile.status
             if instance.employer_profile.status == '2' and not all(checklist):
-                print 'i am in again'
-                serializer.save(employer_profile__status='1')  # completed Profile
-        print 'after update'
-        print instance.employer_profile.status
+                instance.employer_profile.status = '1'
+                serializer.save()  # completed Profile
+
+
+class StaffRegistrationView(generics.CreateAPIView):
+    """
+    this view used for admin user to create staff users
+    """
+    model = Account
+    permission_classes = (
+        permissions.IsAuthenticated,
+        IsAdmin
+    )
+    serializer_class = StaffRegistrationSerializer

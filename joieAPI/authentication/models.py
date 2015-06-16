@@ -12,9 +12,9 @@ class AccountManager(BaseUserManager):
         """
         if not email:
             raise ValueError('Users must have a valid email address.')
-
-        if not kwargs.get('username'):
-            raise ValueError('Users must have a valid username.')
+        # username is not a necessary field
+        # if not kwargs.get('username'):
+        #     raise ValueError('Users must have a valid username.')
 
         account = self.model(
             email=self.normalize_email(email), **kwargs)
@@ -48,7 +48,7 @@ class AccountManager(BaseUserManager):
 
 class Account(AbstractBaseUser):
     email = models.EmailField(unique=True)
-    username = models.CharField(max_length=40, unique=True)
+    username = models.CharField(max_length=40, unique=True, blank=True, null=True)
 
     is_admin = models.BooleanField(default=False)
 
@@ -66,7 +66,7 @@ class Account(AbstractBaseUser):
     objects = AccountManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'app_user_type']
+    REQUIRED_FIELDS = ['app_user_type']
 
     class Meta:
         ordering = ('created_at',)
@@ -76,10 +76,10 @@ class Account(AbstractBaseUser):
 
     def get_full_name(self):
 
-        return self.username
+        return self.email
 
     def get_short_name(self):
-        return self.username
+        return self.email
 
 
 class EmployerProfile(models.Model):
@@ -119,7 +119,7 @@ class EmployerProfile(models.Model):
 
 
     def __unicode__(self):
-        return self.user.username
+        return self.user.USERNAME_FIELD
 
     @receiver(post_save, sender=Account)
     def create_profile_for_user(sender, instance=None, created=False, **kwargs):
@@ -173,7 +173,7 @@ class EmployeeProfile(models.Model):
     status = models.CharField(choices=status_choices,  max_length=20, default='1')
 
     def __unicode__(self):
-        return self.user.username
+        return self.user.USERNAME_FIELD
 
     @receiver(post_save, sender=Account)
     def create_profile_for_user(sender, instance=None, created=False, **kwargs):

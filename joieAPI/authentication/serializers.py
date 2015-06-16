@@ -373,3 +373,19 @@ class Account_Employee_Serializer(serializers.HyperlinkedModelSerializer):
         profile.save()
 
         return instance
+
+
+class StaffRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = (
+            Account.USERNAME_FIELD,
+            Account._meta.pk.name,
+            'password',
+        )
+        write_only_fields = (
+            'password',
+        )
+
+    def create(self, validated_data):
+        return Account.objects.create_staff(**validated_data)
