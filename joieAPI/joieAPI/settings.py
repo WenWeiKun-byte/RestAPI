@@ -114,7 +114,7 @@ MEDIA_URL = '/media/'
 STATIC_ROOT = "/home/django/www/RestAPI/static/"
 MEDIA_ROOT = "/home/django/www/RestAPI/media/"
 
-AUTH_USER_MODEL = 'authentication.Account'
+AUTH_USER_MODEL = 'authentication.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
