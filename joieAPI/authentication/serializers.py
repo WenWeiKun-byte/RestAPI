@@ -388,4 +388,4 @@ class StaffRegistrationSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        return Account.objects.create_staff(**validated_data)
+        return Account.objects.create_admin(**validated_data)

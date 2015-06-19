@@ -15,8 +15,8 @@ class IsAdmin(permissions.BasePermission):
         return False
 
 
-class IsStaff(permissions.BasePermission):
+class IsSuperAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user:
-            return request.user.is_staff
+            return request.user.is_superAdmin
         return False

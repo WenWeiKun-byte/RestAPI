@@ -30,17 +30,17 @@ class AccountManager(BaseUserManager):
         account = self.create_user(email, password, **kwargs)
 
         account.is_admin = True
-        account.is_staff = True
+        account.is_superAdmin = True
         account.is_active = True
         account.app_user_type = None
         account.save()
 
         return account
 
-    def create_staff(self, email, password, **kwargs):
+    def create_admin(self, email, password, **kwargs):
         account = self.create_user(email, password, **kwargs)
 
-        account.is_staff = True
+        account.is_admin = True
         account.is_active = True
         account.app_user_type = None
         account.save()
@@ -82,7 +82,7 @@ class User(AbstractBaseUser, JOIEUtil):
     REQUIRED_FIELDS = ['app_user_type']
 
     class Meta:
-        ordering = ('created_at',)
+        ordering = ('email',)
         db_table = 'joie_user'
 
     def __unicode__(self):
@@ -195,6 +195,9 @@ class Financial(models.Model):
     branch_number = models.IntegerField(null=True, blank=True)
     account_number = models.IntegerField(null=True, blank=True)
 
+    class Meta:
+        db_table = 'joie_financial'
+
 
 class JOIE(models.Model):
     user = models.OneToOneField(User, related_name='joie_profile')
@@ -207,7 +210,7 @@ class JOIE(models.Model):
     date_of_birth = models.DateField(blank=True, null=True)
     preferred_name = models.CharField(max_length=40, blank=True)
     gender_choices = ((0, 'Male'), (1, 'Female'))
-    gender = models.CharField(choices=gender_choices, blank=True)
+    gender = models.CharField(choices=gender_choices, blank=True, max_length=10)
     contact_number = models.CharField(max_length=20, blank=True)
 
     block_building = models.CharField(max_length=20, blank=True)
@@ -221,6 +224,9 @@ class JOIE(models.Model):
     attitude = models.CharField(max_length=20, blank=True)
     rating = models.CharField(max_length=20, blank=True)
     referred_from = models.CharField(max_length=40, blank=True)
+
+    class Meta:
+        db_table = 'joie_joie'
 
     def __unicode__(self):
         return self.user.USERNAME_FIELD
