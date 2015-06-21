@@ -8,9 +8,9 @@ from rest_framework.exceptions import PermissionDenied
 
 from .serializers import Employee_For_Admin_Serializer, Employee_For_Staff_Serializer, AccountSerializer, \
     Employer_For_Admin_Serializer, Employer_For_Staff_Serializer, Account_Employee_Serializer, \
-    Account_Employer_Serializer, StaffRegistrationSerializer
-from .models import EmployerProfile, EmployeeProfile, Account
-from .permissions import IsAdmin, IsStaff
+    Account_Employer_Serializer, StaffRegistrationSerializer, IndustrySerializer, CompanySerializer
+from .models import Employer, JOIE, User, Industry, Company
+from .permissions import IsAdmin, IsSuperAdmin
 
 
 # class EmployerList(generics.ListAPIView):
@@ -43,6 +43,22 @@ def activate(request, uid, token):
         return HttpResponse('account activated fail')
 
 
+class IndustryViewSet(viewsets.ModelViewSet):
+    """
+    this view set is used by admin user for Industry models management
+    """
+    serializer_class = IndustrySerializer
+    queryset = Industry.objects.all()
+
+
+class CompanyViewSet(viewsets.ModelViewSet):
+    """
+    for test only
+    """
+    serializer_class = CompanySerializer
+    queryset = Company.objects.all()
+
+
 class NoCreateViewSet(mixins.ListModelMixin,
                       mixins.DestroyModelMixin,
                       mixins.RetrieveModelMixin,
@@ -67,7 +83,7 @@ class EmployerViewSet(NoCreateViewSet):
     #     serializer.is_valid(raise_exception=True)
     #     new_instance = serializer.save()
     #     return Response(serializer.data)
-    queryset = EmployerProfile.objects.all()
+    queryset = Employer.objects.all()
 
     permission_classes = (
         permissions.IsAuthenticated,
@@ -109,7 +125,7 @@ class EmployeeViewSet(NoCreateViewSet):
     """
     This viewset automatically provides `list` and `detail` actions.
     """
-    queryset = EmployeeProfile.objects.all()
+    queryset = JOIE.objects.all()
 
     permission_classes = (
         permissions.IsAuthenticated,
@@ -151,7 +167,7 @@ class UserView(generics.RetrieveUpdateAPIView):
     """
     override /me Use this endpoint to retrieve/update user.
     """
-    model = Account
+    model = User
     permission_classes = (
         permissions.IsAuthenticated,
     )
@@ -214,9 +230,9 @@ class StaffRegistrationView(generics.CreateAPIView):
     """
     this view used for admin user to create staff users
     """
-    model = Account
+    model = User
     permission_classes = (
         permissions.IsAuthenticated,
-        IsAdmin
+        IsSuperAdmin
     )
     serializer_class = StaffRegistrationSerializer

@@ -18,15 +18,22 @@ class AccountManager(BaseUserManager):
         # if not kwargs.get('username'):
         #     raise ValueError('Users must have a valid username.')
 
-        account = self.model(
+        user = self.model(
             email=self.normalize_email(email), **kwargs)
 
-        account.set_password(password)
-        account.save()
+        user.set_password(password)
+        user.save()
 
-        return account
+        return user
 
     def create_superuser(self, email, password, **kwargs):
+        """
+        this method used for creating superadmin
+        :param email:
+        :param password:
+        :param kwargs:
+        :return:
+        """
         account = self.create_user(email, password, **kwargs)
 
         account.is_admin = True
@@ -38,6 +45,13 @@ class AccountManager(BaseUserManager):
         return account
 
     def create_admin(self, email, password, **kwargs):
+        """
+        this method will be only used by superadmin
+        :param email:
+        :param password:
+        :param kwargs:
+        :return:
+        """
         account = self.create_user(email, password, **kwargs)
 
         account.is_admin = True
@@ -49,6 +63,9 @@ class AccountManager(BaseUserManager):
 
 
 class JOIEUtil(models.Model):
+    """
+    attributes for monitoring the models
+    """
     create_at = models.DateTimeField(auto_now_add=True)
     create_by = models.CharField(max_length=40, blank=True)
     update_at = models.DateTimeField(auto_now=True)
@@ -59,6 +76,9 @@ class JOIEUtil(models.Model):
 
 
 class User(AbstractBaseUser, JOIEUtil):
+    """
+    basic model for auth
+    """
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
@@ -66,7 +86,7 @@ class User(AbstractBaseUser, JOIEUtil):
     is_admin = models.BooleanField(default=False)
     is_superAdmin = models.BooleanField(default=False)
 
-    app_user_type_choices = (('Employer', 'Employer'), ('Employee', 'Employee'))
+    app_user_type_choices = (('Employer', 'Employer'), ('JOIE', 'JOIE'))
     app_user_type = models.CharField(choices=app_user_type_choices, blank=True, null=True, max_length=10)
 
     is_active = models.BooleanField(default=False,
@@ -89,7 +109,6 @@ class User(AbstractBaseUser, JOIEUtil):
         return self.email
 
     def get_full_name(self):
-
         return self.email
 
     def get_short_name(self):
@@ -131,7 +150,11 @@ class SuperAdmin(models.Model):
 
 
 class Industry(models.Model):
-    name = models.CharField(max_length=40)
+    """
+    new employer create with a empty company with default industry
+    industry should not create by normal user
+    """
+    name = models.CharField(max_length=40, unique=True, default='default')
     description = models.TextField(blank=True)
 
     class Meta:
@@ -143,6 +166,9 @@ class Branch(models.Model):
 
 
 class Company(models.Model):
+    """
+    oneToOne relationship with employer model
+    """
     company_name = models.CharField(max_length=100, blank=True)
     roc_number = models.CharField(max_length=40, blank=True)
     business_type_choices = (('Direct', 'Direct'), ('Agency', 'Agency'))
@@ -177,7 +203,8 @@ class Employer(models.Model):
             user = instance
             if not user.is_admin:
                 if user.app_user_type == 'Employer':
-                    company = Company.objects.create()
+                    industry, created = Industry.objects.get_or_create(name='default')
+                    company = Company.objects.create(industry=industry)
                     Employer.objects.get_or_create(user=instance, company=company)
 
     @receiver(pre_delete, sender=User)
@@ -219,10 +246,11 @@ class JOIE(models.Model):
     postal_code = models.IntegerField(blank=True, null=True)
     photo = models.ImageField(upload_to='photos', max_length=100, blank=True)
 
-    punctuality = models.FloatField(blank=True)
-    job_performance = models.CharField(max_length=20, blank=True)
-    attitude = models.CharField(max_length=20, blank=True)
-    rating = models.CharField(max_length=20, blank=True)
+    punctuality = models.FloatField(blank=True, null=True)
+    job_performance = models.FloatField(blank=True, null=True)
+    attitude = models.FloatField(blank=True, null=True)
+    rating = models.FloatField(blank=True, null=True)
+
     referred_from = models.CharField(max_length=40, blank=True)
 
     class Meta:
@@ -235,8 +263,8 @@ class JOIE(models.Model):
     def create_profile_for_user(sender, instance=None, created=False, **kwargs):
         if created:
             user = instance
-            if not user.is_staff:
-                if user.app_user_type == 'Employee':
+            if not user.is_admin:
+                if user.app_user_type == 'JOIE':
                     financial = Financial.objects.create()
                     JOIE.objects.get_or_create(user=instance, financial_detail=financial)
 

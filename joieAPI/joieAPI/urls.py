@@ -24,6 +24,8 @@ from authentication import views
 router = DefaultRouter()
 router.register(r'employers', views.EmployerViewSet)
 router.register(r'employees', views.EmployeeViewSet)
+router.register(r'industry', views.IndustryViewSet)
+router.register(r'company', views.CompanyViewSet)
 
 
 urlpatterns = [

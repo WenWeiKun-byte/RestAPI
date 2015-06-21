@@ -2,18 +2,50 @@ from django.contrib.auth import update_session_auth_hash
 
 from rest_framework import serializers
 
-from .models import EmployeeProfile, EmployerProfile, Account
+from .models import JOIE, Employer, User, Industry, Company
 
 
-class AccountSerializer(serializers.HyperlinkedModelSerializer):
+class AccountSerializer(serializers.ModelSerializer):
+    """
+    first_name and last_name can be updated by user
+    """
     class Meta:
-        model = Account
+        model = User
         fields = (
-        'email', 'username', 'created_at', 'updated_at', 'last_login', 'app_user_type', 'first_time_sign_in',
-        'last_edited_by')
+        'email', 'first_name', 'last_name', 'create_at', 'create_by', 'update_at', 'update_by', 'app_user_type',)
         read_only_fields = (
-        'email', 'created_at', 'updated_at', 'last_login', 'app_user_type', 'first_time_sign_in', 'last_edited_by')
+        'email', 'create_at', 'create_by', 'update_at', 'update_by', 'app_user_type',)
 
+
+class IndustrySerializer(serializers.HyperlinkedModelSerializer):
+    """
+    used by serializer of company
+    """
+    class Meta:
+        model = Industry
+        fields = ('url', 'name', 'description')
+
+
+class CompanySerializer(serializers.HyperlinkedModelSerializer):
+    """
+    used by serializer of employer
+    """
+    industry = serializers.ChoiceField(choices=Industry.objects.all().values_list('name', flat=True))
+
+    class Meta:
+        model = Company
+
+    def create(self, validated_data):
+        industry_name = validated_data.pop('industry')
+        industry = Industry.objects.get(name=industry_name)
+        company = Company.objects.create(industry=industry, **validated_data)
+        return company
+
+    def update(self, instance, validated_data):
+        industry_name = validated_data['industry']
+        industry = Industry.objects.get(name=industry_name)
+        instance.industry = industry
+        return instance
 
 class Employer_For_Admin_Serializer(serializers.HyperlinkedModelSerializer):
     """
@@ -22,9 +54,10 @@ class Employer_For_Admin_Serializer(serializers.HyperlinkedModelSerializer):
     """
 
     user = AccountSerializer()
+    company = CompanySerializer()
 
     class Meta:
-        model = EmployerProfile
+        model = Employer
         fields = ('url', 'user', 'company_name', 'roc_number', 'business_type', 'ea_number', 'company_address',
                   'company_postal_code', 'company_description', 'company_contact_person',
                   'company_contact_detail', 'company_logo',
@@ -83,7 +116,7 @@ class Employee_For_Admin_Serializer(serializers.HyperlinkedModelSerializer):
     user = AccountSerializer()
 
     class Meta:
-        model = EmployeeProfile
+        model = JOIE
         fields = ('url', 'user', 'nric_num', 'name_on_nric', 'nric_type', 'date_of_birth',
                   'preferred_name', 'photo', 'gender',
                   'contact_number', 'block_building', 'street_name', 'unit_number', 'postal_code',
@@ -149,7 +182,7 @@ class Employer_For_Staff_Serializer(serializers.HyperlinkedModelSerializer):
     user = AccountSerializer()
 
     class Meta:
-        model = EmployerProfile
+        model = Employer
         fields = ('url', 'user', 'company_name', 'roc_number', 'business_type', 'ea_number', 'company_address',
                   'company_postal_code', 'company_description', 'company_contact_person',
                   'company_contact_detail', 'company_logo',
@@ -196,7 +229,7 @@ class Employee_For_Staff_Serializer(serializers.HyperlinkedModelSerializer):
     user = AccountSerializer()
 
     class Meta:
-        model = EmployeeProfile
+        model = JOIE
         fields = ('url', 'user', 'nric_num', 'name_on_nric', 'nric_type', 'date_of_birth',
                   'preferred_name', 'photo', 'gender',
                   'contact_number', 'block_building', 'street_name', 'unit_number', 'postal_code',
@@ -256,7 +289,7 @@ class Employer_For_User_Serializer(serializers.HyperlinkedModelSerializer):
     """
 
     class Meta:
-        model = EmployerProfile
+        model = Employer
         fields = ('company_name', 'roc_number', 'business_type', 'ea_number', 'company_address',
                   'company_postal_code', 'company_description', 'company_contact_person',
                   'company_contact_detail', 'company_logo',
@@ -273,7 +306,7 @@ class Employee_For_User_Serializer(serializers.HyperlinkedModelSerializer):
     """
 
     class Meta:
-        model = EmployeeProfile
+        model = JOIE
         fields = ('nric_num', 'name_on_nric', 'nric_type', 'date_of_birth',
                   'preferred_name', 'photo', 'gender',
                   'contact_number', 'block_building', 'street_name', 'unit_number', 'postal_code',
@@ -294,7 +327,7 @@ class Account_Employer_Serializer(serializers.HyperlinkedModelSerializer):
     employer_profile = Employer_For_User_Serializer()
 
     class Meta:
-        model = Account
+        model = User
         fields = (
         'email', 'username', 'created_at', 'updated_at', 'last_login', 'app_user_type', 'first_time_sign_in',
         'last_edited_by', 'employer_profile')
@@ -337,7 +370,7 @@ class Account_Employee_Serializer(serializers.HyperlinkedModelSerializer):
     employee_profile = Employee_For_User_Serializer()
 
     class Meta:
-        model = Account
+        model = User
         fields = (
         'email', 'username', 'created_at', 'updated_at', 'last_login', 'app_user_type', 'first_time_sign_in',
         'last_edited_by', 'employee_profile')
@@ -377,10 +410,10 @@ class Account_Employee_Serializer(serializers.HyperlinkedModelSerializer):
 
 class StaffRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Account
+        model = User
         fields = (
-            Account.USERNAME_FIELD,
-            Account._meta.pk.name,
+            User.USERNAME_FIELD,
+            User._meta.pk.name,
             'password',
         )
         write_only_fields = (
@@ -388,4 +421,4 @@ class StaffRegistrationSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        return Account.objects.create_admin(**validated_data)
+        return User.objects.create_admin(**validated_data)
