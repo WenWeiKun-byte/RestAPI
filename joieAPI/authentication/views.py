@@ -132,35 +132,35 @@ class EmployeeViewSet(NoCreateViewSet):
     )
 
     def get_serializer_class(self):
-        if self.request.user.is_staff:
-            if self.request.user.is_admin:
+        if self.request.user.is_admin:
+            if self.request.user.is_superAdmin:
                 return Employee_For_Admin_Serializer
             return Employee_For_Staff_Serializer
         else:
             raise PermissionDenied
 
-    def perform_update(self, serializer):
-        user = self.request.user
-        instance = serializer.save()
-        instance.user.last_edited_by = user.email
-        serializer.save()
-        checklist = [instance.nric_num is not '',
-                     instance.name_on_nric is not '',
-                     instance.nric_type is not '',
-                     instance.date_of_birth is not '',
-                     instance.preferred_name is not None,
-                     instance.photo is not '',
-                     instance.gender is not '',
-                     instance.contact_number is not '',
-                     instance.block_building is not '',
-                     instance.street_name is not '',
-                     instance.unit_number is not '',
-                     instance.postal_code is not None,
-                     ]
-        if instance.status == '1' and all(checklist):
-            serializer.save(status='2')  # completed Profile
-        if instance.status == '2' and not all(checklist):
-            serializer.save(status='1')  # completed Profile
+    # def perform_update(self, serializer):
+    #     user = self.request.user
+    #     instance = serializer.save()
+    #     instance.user.last_edited_by = user.email
+    #     serializer.save()
+    #     checklist = [instance.nric_num is not '',
+    #                  instance.name_on_nric is not '',
+    #                  instance.nric_type is not '',
+    #                  instance.date_of_birth is not '',
+    #                  instance.preferred_name is not None,
+    #                  instance.photo is not '',
+    #                  instance.gender is not '',
+    #                  instance.contact_number is not '',
+    #                  instance.block_building is not '',
+    #                  instance.street_name is not '',
+    #                  instance.unit_number is not '',
+    #                  instance.postal_code is not None,
+    #                  ]
+    #     if instance.status == '1' and all(checklist):
+    #         serializer.save(status='2')  # completed Profile
+    #     if instance.status == '2' and not all(checklist):
+    #         serializer.save(status='1')  # completed Profile
 
 
 class UserView(generics.RetrieveUpdateAPIView):

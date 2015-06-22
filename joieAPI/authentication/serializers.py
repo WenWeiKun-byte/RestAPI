@@ -2,7 +2,7 @@ from django.contrib.auth import update_session_auth_hash
 
 from rest_framework import serializers
 
-from .models import JOIE, Employer, User, Industry, Company, SocialLink
+from .models import JOIE, Employer, User, Industry, Company, SocialLink, Financial
 
 
 class SocialLinkSerializer(serializers.ModelSerializer):
@@ -109,68 +109,33 @@ class Employer_For_Admin_Serializer(serializers.HyperlinkedModelSerializer):
         return instance
 
 
+class FinancialSerializer(serializers.ModelSerializer):
+    """
+    used by serializer of company
+    """
+    class Meta:
+        model = Financial
+        fields = ('bank_number', 'branch_number', 'account_number')
+
+
 class Employee_For_Admin_Serializer(serializers.HyperlinkedModelSerializer):
     """
     Employee_For_Admin_Serializer for admin user.
     admin user can update all of the necessary fields
     """
     user = AccountSerializer()
+    financial_detail = FinancialSerializer()
 
     class Meta:
         model = JOIE
-        fields = ('url', 'user', 'nric_num', 'name_on_nric', 'nric_type', 'date_of_birth',
-                  'preferred_name', 'photo', 'gender',
-                  'contact_number', 'block_building', 'street_name', 'unit_number', 'postal_code',
-                  'bank_number', 'branch_number', 'account_number',
-                  'feedback_score_punctuality', 'feedback_score_job_performance', 'feedback_score_attitude', 'rating',
-                  'referred_from',
-                  'facebook', 'twitter', 'instagram',
-                  'status')
-        # read_only_fields = ('first_time_sign_in', 'last_edited_by',)
 
     def update(self, instance, validated_data):
         user_data = validated_data['user']
-        print validated_data
-        print len(user_data)
-        user = instance.user
-
-        instance.nric_num = validated_data.get('nric_num', instance.nric_num)
-        instance.name_on_nric = validated_data.get('name_on_nric', instance.name_on_nric)
-        instance.nric_type = validated_data.get('nric_type', instance.nric_type)
-        instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
-        instance.preferred_name = validated_data.get('preferred_name', instance.preferred_name)
-        instance.photo = validated_data.get('photo', instance.photo)
-        instance.gender = validated_data.get('gender', instance.gender)
-
-        instance.contact_number = validated_data.get('contact_number', instance.contact_number)
-        instance.block_building = validated_data.get('block_building', instance.block_building)
-        instance.street_name = validated_data.get('street_name', instance.street_name)
-        instance.unit_number = validated_data.get('unit_number', instance.unit_number)
-        instance.postal_code = validated_data.get('postal_code', instance.postal_code)
-        instance.bank_number = validated_data.get('bank_number', instance.bank_number)
-        instance.branch_number = validated_data.get('branch_number', instance.branch_number)
-        instance.account_number = validated_data.get('account_number', instance.account_number)
-
-        instance.feedback_score_punctuality = validated_data.get('feedback_score_punctuality',
-                                                                 instance.feedback_score_punctuality)
-        instance.feedback_score_job_performance = validated_data.get('feedback_score_job_performance',
-                                                                     instance.feedback_score_job_performance)
-        instance.feedback_score_attitude = validated_data.get('feedback_score_attitude',
-                                                              instance.feedback_score_attitude)
-        instance.rating = validated_data.get('rating', instance.rating)
-        instance.referred_from = validated_data.get('referred_from', instance.referred_from)
-
-        instance.facebook = validated_data.get('facebook', instance.facebook)
-        instance.twitter = validated_data.get('twitter', instance.twitter)
-        instance.instagram = validated_data.get('instagram', instance.instagram)
-
-        instance.status = validated_data.get('status', instance.status)
-
+        financial_data = validated_data['financial_detail']
+        instance.user = AccountSerializer().update(instance.user, user_data)
+        # financial object created during JOIE object creation
+        instance.financial_detail = FinancialSerializer().update(instance.financial_detail, financial_data)
         instance.save()
-
-        user.username = user_data.get('username', user.username)
-        user.save()
-
         return instance
 
 
