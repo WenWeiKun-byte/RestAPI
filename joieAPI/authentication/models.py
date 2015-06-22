@@ -122,8 +122,8 @@ class User(AbstractBaseUser, JOIEUtil):
 
 
 class SocialLink(models.Model):
-    networkName_choices = ((0, 'Facebook'), (1, 'Instagram'), (2, 'Twitter'), (3, 'LinkedIn'))
-    network_name = models.CharField(choices=networkName_choices, blank=True, null=True, max_length=10)
+    networkName_choices = (('Facebook', 'Facebook'), ('Instagram', 'Instagram'), ('Twitter', 'Twitter'), ('LinkedIn', 'LinkedIn'))
+    network_name = models.CharField(choices=networkName_choices, max_length=10)
     link = models.URLField()
 
     user = models.ForeignKey(User, blank=True, null=True, related_name='socialLinks')
@@ -179,7 +179,7 @@ class Company(models.Model):
     company_description = models.CharField(max_length=100, blank=True)
     company_contact_person = models.CharField(max_length=40, blank=True)
     company_contact_detail = models.CharField(max_length=100, blank=True)
-    company_logo = models.ImageField(upload_to='logo', max_length=100, blank=True)
+    company_logo = models.ImageField(upload_to='logo', max_length=100, blank=True, null=True)
     credit_amount = models.FloatField(blank=True, null=True)
     industry = models.ForeignKey(Industry)
 

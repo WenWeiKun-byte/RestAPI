@@ -2,19 +2,49 @@ from django.contrib.auth import update_session_auth_hash
 
 from rest_framework import serializers
 
-from .models import JOIE, Employer, User, Industry, Company
+from .models import JOIE, Employer, User, Industry, Company, SocialLink
+
+
+class SocialLinkSerializer(serializers.ModelSerializer):
+    """
+    used by serializer of user
+    """
+    class Meta:
+        model = SocialLink
+        fields = ('network_name', 'link')
 
 
 class AccountSerializer(serializers.ModelSerializer):
     """
     first_name and last_name can be updated by user
     """
+    socialLinks = SocialLinkSerializer(many=True)
+
     class Meta:
         model = User
         fields = (
-        'email', 'first_name', 'last_name', 'create_at', 'create_by', 'update_at', 'update_by', 'app_user_type',)
+        'email', 'first_name', 'last_name', 'app_user_type', 'socialLinks', 'create_at', 'create_by', 'update_at', 'update_by', )
         read_only_fields = (
         'email', 'create_at', 'create_by', 'update_at', 'update_by', 'app_user_type',)
+
+    def update(self, instance, validated_data):
+        user = instance
+        socialLinks_data = validated_data.pop('socialLinks')
+        if socialLinks_data:
+            # user.socialLinks.clear()
+            SocialLink.objects.filter(user=user).delete()
+            for socialLink_data in socialLinks_data:
+                try:
+                    socialLink = SocialLink.objects.get(user=user, network_name=socialLink_data['network_name'])
+                    socialLink.link = socialLink_data['link']
+                    socialLink.save()
+                except SocialLink.DoesNotExist:
+                    SocialLink.objects.create(user=user, **socialLink_data)
+        else:
+            # user.socialLinks.clear()
+            SocialLink.objects.filter(user=user).delete()
+        instance.save()
+        return instance
 
 
 class IndustrySerializer(serializers.HyperlinkedModelSerializer):
@@ -26,11 +56,18 @@ class IndustrySerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'name', 'description')
 
 
+class ModelChoiceField(serializers.ChoiceField):
+    def to_representation(self, value):
+        if value in ('', None):
+            return value
+        return value.name
+
+
 class CompanySerializer(serializers.HyperlinkedModelSerializer):
     """
     used by serializer of employer
     """
-    industry = serializers.ChoiceField(choices=Industry.objects.all().values_list('name', flat=True))
+    industry = ModelChoiceField(choices=Industry.objects.all().values_list('name', flat=True))
 
     class Meta:
         model = Company
@@ -42,10 +79,14 @@ class CompanySerializer(serializers.HyperlinkedModelSerializer):
         return company
 
     def update(self, instance, validated_data):
-        industry_name = validated_data['industry']
+        industry_name = validated_data.pop('industry')
         industry = Industry.objects.get(name=industry_name)
         instance.industry = industry
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
         return instance
+
 
 class Employer_For_Admin_Serializer(serializers.HyperlinkedModelSerializer):
     """
@@ -58,53 +99,13 @@ class Employer_For_Admin_Serializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Employer
-        fields = ('url', 'user', 'company_name', 'roc_number', 'business_type', 'ea_number', 'company_address',
-                  'company_postal_code', 'company_description', 'company_contact_person',
-                  'company_contact_detail', 'company_logo',
-                  'credit_amount', 'card_type', 'card_number', 'name_on_card', 'expiration_date',
-                  'card_security_code', 'billing_address', 'city', 'state_province', 'zip_code', 'billing_email',
-                  'facebook', 'twitter', 'instagram',
-                  'status')
-        # read_only_fields = ('first_time_sign_in', 'last_edited_by',)    # not expose to endpoint but can update at view
 
     def update(self, instance, validated_data):
         user_data = validated_data['user']
-        user = instance.user
-
-        instance.company_name = validated_data.get('company_name', instance.company_name)
-        instance.roc_number = validated_data.get('roc_number', instance.roc_number)
-        instance.business_type = validated_data.get('business_type', instance.business_type)
-        instance.ea_number = validated_data.get('ea_number', instance.ea_number)
-        instance.company_address = validated_data.get('company_address', instance.company_address)
-        instance.company_postal_code = validated_data.get('company_postal_code', instance.company_postal_code)
-        instance.company_description = validated_data.get('company_description', instance.company_description)
-        instance.company_contact_person = validated_data.get('company_contact_person', instance.company_contact_person)
-        instance.company_contact_detail = validated_data.get('company_contact_detail', instance.company_contact_detail)
-        instance.company_logo = validated_data.get('company_logo', instance.company_logo)
-
-        instance.credit_amount = validated_data.get('credit_amount', instance.credit_amount)
-        instance.card_type = validated_data.get('card_type', instance.card_type)
-        instance.card_number = validated_data.get('card_number', instance.card_number)
-        instance.name_on_card = validated_data.get('name_on_card', instance.name_on_card)
-        instance.expiration_date = validated_data.get('expiration_date', instance.expiration_date)
-        instance.card_security_code = validated_data.get('card_security_code', instance.card_security_code)
-        instance.billing_address = validated_data.get('billing_address', instance.billing_address)
-        instance.city = validated_data.get('city', instance.city)
-        instance.state_province = validated_data.get('state_province', instance.state_province)
-        instance.zip_code = validated_data.get('zip_code', instance.zip_code)
-        instance.billing_email = validated_data.get('billing_email', instance.billing_email)
-
-        instance.facebook = validated_data.get('facebook', instance.facebook)
-        instance.twitter = validated_data.get('twitter', instance.twitter)
-        instance.instagram = validated_data.get('instagram', instance.instagram)
-
-        instance.status = validated_data.get('status', instance.status)
-
+        company_data = validated_data['company']
+        instance.user = AccountSerializer().update(instance.user, user_data)
+        instance.company = CompanySerializer().update(instance.company, company_data)
         instance.save()
-
-        user.username = user_data.get('username', user.username)
-        user.save()
-
         return instance
 
 

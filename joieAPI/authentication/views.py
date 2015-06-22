@@ -8,8 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 
 from .serializers import Employee_For_Admin_Serializer, Employee_For_Staff_Serializer, AccountSerializer, \
     Employer_For_Admin_Serializer, Employer_For_Staff_Serializer, Account_Employee_Serializer, \
-    Account_Employer_Serializer, StaffRegistrationSerializer, IndustrySerializer, CompanySerializer
-from .models import Employer, JOIE, User, Industry, Company
+    Account_Employer_Serializer, StaffRegistrationSerializer, IndustrySerializer, CompanySerializer, SocialLinkSerializer
+from .models import Employer, JOIE, User, Industry, Company, SocialLink
 from .permissions import IsAdmin, IsSuperAdmin
 
 
@@ -90,35 +90,35 @@ class EmployerViewSet(NoCreateViewSet):
     )
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter, )
-    filter_fields = ('status', 'user__username')
-    search_fields = ('user__username', 'user__email')
+    filter_fields = ('user__status', 'user__first_time_sign_in')
+    search_fields = ('user__last_name', 'user__email')
 
     def get_serializer_class(self):
-        if self.request.user.is_staff:
-            if self.request.user.is_admin:
+        if self.request.user.is_admin:
+            if self.request.user.is_superAdmin:
                 return Employer_For_Admin_Serializer
             return Employer_For_Staff_Serializer
         else:
             raise PermissionDenied
 
-    def perform_update(self, serializer):
-        user = self.request.user
-        instance = serializer.save()
-        instance.user.last_edited_by = user.email
-        serializer.save()
-        checklist = [instance.company_name is not '',
-                     instance.roc_number is not '',
-                     instance.business_type is not '',
-                     instance.company_address is not '',
-                     instance.company_postal_code is not None,
-                     instance.company_contact_person is not '',
-                     instance.company_contact_detail is not '',
-                     instance.company_logo is not '',
-                     ]
-        if instance.status == '1' and all(checklist):
-            serializer.save(status='2')  # completed Profile
-        if instance.status == '2' and not all(checklist):
-            serializer.save(status='1')  # completed Profile
+    # def perform_update(self, serializer):
+    #     user = self.request.user
+    #     instance = serializer.save()
+    #     instance.user.last_edited_by = user.email
+    #     serializer.save()
+    #     checklist = [instance.company_name is not '',
+    #                  instance.roc_number is not '',
+    #                  instance.business_type is not '',
+    #                  instance.company_address is not '',
+    #                  instance.company_postal_code is not None,
+    #                  instance.company_contact_person is not '',
+    #                  instance.company_contact_detail is not '',
+    #                  instance.company_logo is not '',
+    #                  ]
+    #     if instance.status == '1' and all(checklist):
+    #         serializer.save(status='2')  # completed Profile
+    #     if instance.status == '2' and not all(checklist):
+    #         serializer.save(status='1')  # completed Profile
 
 
 class EmployeeViewSet(NoCreateViewSet):
