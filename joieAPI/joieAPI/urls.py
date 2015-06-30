@@ -17,22 +17,25 @@ from django.conf.urls import include, url
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
-from authentication import views
+from authentication import views as av
+from jobs import views as jv
 
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
-router.register(r'employers', views.EmployerViewSet)
-router.register(r'employees', views.EmployeeViewSet)
-router.register(r'industry', views.IndustryViewSet)
-router.register(r'company', views.CompanyViewSet)
+router.register(r'employers', av.EmployerViewSet)
+router.register(r'employees', av.EmployeeViewSet)
+router.register(r'industry', av.IndustryViewSet)
+router.register(r'company', av.CompanyViewSet)
+router.register(r'joblisttype', jv.JobListTypeViewSet)
+
 
 
 urlpatterns = [
-    url(r'^auth/me/$', views.UserView.as_view(), name='user'),
-    url(r'^auth/create/staff/$', views.StaffRegistrationView.as_view(), name='staff_create'),
+    url(r'^auth/me/$', av.UserView.as_view(), name='user'),
+    url(r'^auth/create/staff/$', av.StaffRegistrationView.as_view(), name='staff_create'),
     url(r'^auth/', include('djoser.urls')),
-    url(r'^auth/frontend/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', views.activate),
+    url(r'^auth/frontend/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', av.activate),
     url(r'^', include(router.urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

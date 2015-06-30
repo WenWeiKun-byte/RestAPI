@@ -13,21 +13,23 @@ class JobListType(models.Model):
     TYPE_PREMIUM_ADVERT = 2
     TYPE_LAST_MINUTE_ADVERT = 3
     list_type_choice = ((1, 'Normal'), (2, 'Premium Advert'), (3, 'Last Minute Advert'))
-    list_type = models.CharField(choices=list_type_choice, max_length=20)
+    list_type = models.CharField(choices=list_type_choice, max_length=20, unique=True, error_messages={
+        'unique': "This type already exists.",
+    })
     description = models.TextField(blank=True)
 
     class Meta:
         db_table = 'joie_job_list_type'
 
 
-class Job(models.Model, JOIEUtil):
+class Job(JOIEUtil, models.Model):
     """
     Created by Employers
     A job listing created by employers to allow JOIEs to apply
     """
     owner = models.ForeignKey(Employer, related_name='job_list')
     job_list_type = models.OneToOneField(JobListType)
-    applicants = models.ManyToManyField(JOIE, through=Application, blank=True, null=True, related_name='job_list')
+    applicants = models.ManyToManyField(JOIE, through='Application', blank=True, related_name='job_list')
 
     title = models.CharField(max_length=50)
     detail = models.TextField()
