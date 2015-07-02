@@ -112,8 +112,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-STATIC_ROOT = "/home/django/www/RestAPI/static/"
-MEDIA_ROOT = "/home/django/www/RestAPI/media/"
+STATIC_ROOT = "/tmp/django/www/RestAPI/static/"
+MEDIA_ROOT = "/tmp/django/www/RestAPI/media/"
 
 AUTH_USER_MODEL = 'authentication.User'
 

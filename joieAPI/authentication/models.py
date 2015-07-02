@@ -157,6 +157,9 @@ class Industry(models.Model):
     name = models.CharField(max_length=40, unique=True, default='default')
     description = models.TextField(blank=True)
 
+    def get_name(self):
+        return self.name
+
     class Meta:
         db_table = 'joie_industry'
 

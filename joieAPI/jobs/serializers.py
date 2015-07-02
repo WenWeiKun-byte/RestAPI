@@ -35,17 +35,17 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
     Created by Employers
     A job listing created by employers to allow JOIEs to apply
     """
-    owner = serializers.SlugRelatedField(slug_field='company__company_name')
+    owner = serializers.SlugRelatedField(slug_field='company__company_name', read_only=True)
     job_list_type = ModelChoiceField(choices=JobListType.objects.all().values_list('list_type', flat=True))
 
     class Meta:
         model = Job
         exclude = ('applicants', 'job_id', 'status', 'time_of_published')
-        read_only_fields = ('owner', )
+        read_only_fields = ('owner', 'create_at', 'create_by', 'update_at', 'update_by')
 
     def create(self, validated_data):
         job_type_name = validated_data.pop('job_list_type')
-        job_list_type = JobListType.objects.get(name=job_type_name)
+        job_list_type = JobListType.objects.get(list_type=job_type_name)
         owner_id = validated_data.pop('owner')
         owner = Employer.objects.get(id=owner_id)
         job = Job.objects.create(owner=owner, job_list_type=job_list_type, **validated_data)

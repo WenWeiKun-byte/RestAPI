@@ -60,7 +60,7 @@ class ModelChoiceField(serializers.ChoiceField):
     def to_representation(self, value):
         if value in ('', None):
             return value
-        return value.name
+        return value.get_name
 
 
 class CompanySerializer(serializers.HyperlinkedModelSerializer):

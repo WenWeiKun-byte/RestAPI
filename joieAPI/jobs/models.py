@@ -18,6 +18,10 @@ class JobListType(models.Model):
     })
     description = models.TextField(blank=True)
 
+    # for ModelChoiceField use
+    def get_name(self):
+        return self.list_type
+
     class Meta:
         db_table = 'joie_job_list_type'
 
@@ -41,7 +45,7 @@ class Job(JOIEUtil, models.Model):
     status = StatusField(default=STATUS.draft)
     job_rate = models.FloatField()
 
-    time_of_published = models.DateTimeField()
+    time_of_published = models.DateTimeField(blank=True, null=True)
     # release date will not accurate to Time, easy for cronjob
     time_of_release = models.DateField()
 
