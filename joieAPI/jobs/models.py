@@ -13,7 +13,7 @@ class JobListType(models.Model):
     TYPE_PREMIUM_ADVERT = 2
     TYPE_LAST_MINUTE_ADVERT = 3
     list_type_choice = ((1, 'Normal'), (2, 'Premium Advert'), (3, 'Last Minute Advert'))
-    list_type = models.CharField(choices=list_type_choice, max_length=20, unique=True, error_messages={
+    list_type = models.IntegerField(choices=list_type_choice, unique=True, error_messages={
         'unique': "This type already exists.",
     })
     description = models.TextField(blank=True)
@@ -27,6 +27,9 @@ class Job(JOIEUtil, models.Model):
     Created by Employers
     A job listing created by employers to allow JOIEs to apply
     """
+    # job_id will be assigned after published
+    job_id = models.IntegerField(unique=True, null=True, blank=True)
+
     owner = models.ForeignKey(Employer, related_name='job_list')
     job_list_type = models.OneToOneField(JobListType)
     applicants = models.ManyToManyField(JOIE, through='Application', blank=True, related_name='job_list')
@@ -39,7 +42,8 @@ class Job(JOIEUtil, models.Model):
     job_rate = models.FloatField()
 
     time_of_published = models.DateTimeField()
-    time_of_release = models.DateTimeField()
+    # release date will not accurate to Time, easy for cronjob
+    time_of_release = models.DateField()
 
     class Meta:
         db_table = 'joie_job'
