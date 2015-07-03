@@ -3,7 +3,7 @@ from django.contrib.auth import update_session_auth_hash
 from rest_framework import serializers
 
 from .models import JOIE, Employer, User, Industry, Company, SocialLink, Financial
-
+from joieAPI.adhoc import ModelChoiceField, ImageField
 
 class SocialLinkSerializer(serializers.ModelSerializer):
     """
@@ -56,18 +56,12 @@ class IndustrySerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'name', 'description')
 
 
-class ModelChoiceField(serializers.ChoiceField):
-    def to_representation(self, value):
-        if value in ('', None):
-            return value
-        return value.get_name
-
-
 class CompanySerializer(serializers.HyperlinkedModelSerializer):
     """
     used by serializer of employer
     """
     industry = ModelChoiceField(choices=Industry.objects.all().values_list('name', flat=True))
+    company_logo = ImageField(allow_null=True, required=False)
 
     class Meta:
         model = Company
@@ -82,6 +76,9 @@ class CompanySerializer(serializers.HyperlinkedModelSerializer):
         industry_name = validated_data.pop('industry')
         industry = Industry.objects.get(name=industry_name)
         instance.industry = industry
+        # deleting the image because has a None value
+        if 'image' in validated_data and not validated_data['image']:
+            validated_data.pop('image')
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()

@@ -22,6 +22,9 @@ class JobListType(models.Model):
     def get_name(self):
         return self.list_type
 
+    def __unicode__(self):
+        return self.list_type
+
     class Meta:
         db_table = 'joie_job_list_type'
 
@@ -32,7 +35,7 @@ class Job(JOIEUtil, models.Model):
     A job listing created by employers to allow JOIEs to apply
     """
     # job_id will be assigned after published
-    job_id = models.IntegerField(unique=True, null=True, blank=True)
+    job_id = models.CharField(max_length=30, unique=True, null=True, blank=True)
 
     owner = models.ForeignKey(Employer, related_name='job_list')
     job_list_type = models.OneToOneField(JobListType)

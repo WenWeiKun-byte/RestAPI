@@ -2,7 +2,8 @@ from rest_framework import serializers, validators
 from jobs.models import Job, JobListType, Application
 from authentication.models import Employer, JOIE
 
-from authentication.serializers import ModelChoiceField
+from authentication.serializers import Employer_For_Admin_Serializer
+from joieAPI.adhoc import ModelChoiceField, ImageField
 
 
 class JobListTypeSerializer(serializers.Serializer):
@@ -35,8 +36,9 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
     Created by Employers
     A job listing created by employers to allow JOIEs to apply
     """
-    owner = serializers.SlugRelatedField(slug_field='company__company_name', read_only=True)
+    owner = Employer_For_Admin_Serializer(read_only=True)   # TODO need change to other serializer
     job_list_type = ModelChoiceField(choices=JobListType.objects.all().values_list('list_type', flat=True))
+    promotion_banner = ImageField(allow_null=True, required=False)
 
     class Meta:
         model = Job
@@ -53,8 +55,11 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
 
     def update(self, instance, validated_data):
         job_type_name = validated_data.pop('job_list_type')
-        job_list_type = JobListType.objects.get(name=job_type_name)
+        job_list_type = JobListType.objects.get(list_type=job_type_name)
         instance.job_list_type = job_list_type
+        # deleting the image because has a None value
+        if 'image' in validated_data and not validated_data['image']:
+            validated_data.pop('image')
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()

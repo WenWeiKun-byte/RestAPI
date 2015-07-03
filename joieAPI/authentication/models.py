@@ -160,6 +160,9 @@ class Industry(models.Model):
     def get_name(self):
         return self.name
 
+    def __unicode__(self):
+        return self.name
+
     class Meta:
         db_table = 'joie_industry'
 
@@ -188,6 +191,9 @@ class Company(models.Model):
 
     class Meta:
         db_table = 'joie_company'
+
+    def __unicode__(self):
+        return self.company_name
 
 
 class Employer(models.Model):
