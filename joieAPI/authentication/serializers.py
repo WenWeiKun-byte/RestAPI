@@ -29,9 +29,11 @@ class AccountSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         user = instance
-        socialLinks_data = validated_data.pop('socialLinks')
+        socialLinks_data = validated_data.pop('socialLinks', None)
         if socialLinks_data:
             # user.socialLinks.clear()
+            print 'in'
+            print socialLinks_data
             SocialLink.objects.filter(user=user).delete()
             for socialLink_data in socialLinks_data:
                 try:
@@ -42,7 +44,9 @@ class AccountSerializer(serializers.ModelSerializer):
                     SocialLink.objects.create(user=user, **socialLink_data)
         else:
             # user.socialLinks.clear()
-            SocialLink.objects.filter(user=user).delete()
+            SocialLink.objects.filter(user=user).delete() #?????
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
         return instance
 
@@ -73,7 +77,7 @@ class CompanySerializer(serializers.HyperlinkedModelSerializer):
         return company
 
     def update(self, instance, validated_data):
-        industry_name = validated_data.pop('industry')
+        industry_name = validated_data.pop('industry', instance.industry)
         industry = Industry.objects.get(name=industry_name)
         instance.industry = industry
         # deleting the image because has a None value
@@ -98,10 +102,12 @@ class Employer_For_Admin_Serializer(serializers.HyperlinkedModelSerializer):
         model = Employer
 
     def update(self, instance, validated_data):
-        user_data = validated_data['user']
-        company_data = validated_data['company']
-        instance.user = AccountSerializer().update(instance.user, user_data)
-        instance.company = CompanySerializer().update(instance.company, company_data)
+        user_data = validated_data.get('user', None)
+        company_data = validated_data.get('company', None)
+        if user_data:
+            instance.user = AccountSerializer().update(instance.user, user_data)
+        if company_data:
+            instance.company = CompanySerializer().update(instance.company, company_data)
         instance.save()
         return instance
 

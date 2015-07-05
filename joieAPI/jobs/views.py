@@ -2,12 +2,12 @@ from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
-from datetime import datetime
+from datetime import datetime, date
 from django.utils import timezone
 
-from jobs.serializers import JobListTypeSerializer, JobDraftSerializer
+from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer
 from jobs.models import JobListType, Job
-from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS
+from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS, ReadDestroyViewSet
 
 
 class JobListTypeViewSet(viewsets.ModelViewSet):
@@ -25,18 +25,6 @@ class DraftJobViewSet(viewsets.ModelViewSet):
     """
     serializer_class = JobDraftSerializer
     queryset = Job.objects.filter(status=Job.STATUS.draft)
-
-    # def create(self, request, *args, **kwargs):
-    #     owner = request.user.id
-    #     print owner
-    #     print request.data
-    #     # update owner info at the backend
-    #     data = request.data
-    #     serializer = self.get_serializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_create(serializer)
-    #     headers = self.get_success_headers(serializer.data)
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         owner = self.request.user.id
@@ -63,3 +51,48 @@ class DraftJobViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+class ActiveJobViewSet(ReadDestroyViewSet):
+    """
+    Manage the published jobs
+    Modify by Employers
+    Including copy as draft for an existing job, remove job to archive folder, view job applicants, approval
+    """
+    serializer_class = JobActiveSerializer
+    queryset = Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today)
+
+    @detail_route(methods=['post'])
+    def copy(self, request, pk=None):
+        """
+        copy the current job as a draft
+
+        """
+        serializer = ActionSerializer(data=request.data)
+        current_job = self.get_object()
+        if serializer.is_valid():
+            if serializer.data.pop('action') == AVAILABLE_ACTIONS['JOB_COPY']:
+                new_draft = Job()
+                new_draft.owner = current_job.owner
+                new_draft.job_list_type = current_job.job_list_type
+                new_draft.status = Job.STATUS.draft
+                new_draft.job_rate = current_job.job_rate
+                new_draft.promotion_banner = current_job.promotion_banner
+                new_draft.title = current_job.title
+                new_draft.time_of_release = current_job.time_of_release
+                new_draft.save()
+                return Response({'status': 'new draft job saved'})
+            else:
+                return Response({'status': 'action not supported'})
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_destroy(self, instance):
+        """
+        will not delete the job object, but update the status to archived
+        :param instance: current job
+        :return:
+        """
+        instance.stats = Job.STATUS.archived
+        instance.save()

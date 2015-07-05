@@ -1,7 +1,8 @@
-from rest_framework import serializers
+from rest_framework import serializers, viewsets, mixins
 
 
 AVAILABLE_ACTIONS = {'JOB_PUBLISH': 'publish',
+                     'JOB_COPY': 'copy'
                      }
 
 
@@ -30,3 +31,14 @@ class ImageField(serializers.ImageField):
 
 class ActionSerializer(serializers.Serializer):
     action = serializers.CharField()
+
+
+class ReadDestroyViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.DestroyModelMixin,
+                           viewsets.GenericViewSet):
+    """
+    A viewset that provides default `list()`, 'destroy()' and `retrieve()` actions.
+    use for actived job management
+    """
+    pass

@@ -38,7 +38,7 @@ class Job(JOIEUtil, models.Model):
     job_id = models.CharField(max_length=30, unique=True, null=True, blank=True)
 
     owner = models.ForeignKey(Employer, related_name='job_list')
-    job_list_type = models.OneToOneField(JobListType)
+    job_list_type = models.ForeignKey(JobListType)
     applicants = models.ManyToManyField(JOIE, through='Application', blank=True, related_name='job_list')
 
     title = models.CharField(max_length=50)
@@ -57,6 +57,9 @@ class Job(JOIEUtil, models.Model):
 
     def __unicode__(self):
         return self.title
+
+    def get_applicant_number(self):
+        return self.applicants.count()
 
 
 class Application(models.Model):

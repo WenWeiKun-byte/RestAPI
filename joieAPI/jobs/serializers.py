@@ -1,6 +1,7 @@
 from rest_framework import serializers, validators
 from jobs.models import Job, JobListType, Application
 from authentication.models import Employer, JOIE
+from datetime import date
 
 from authentication.serializers import Employer_For_Admin_Serializer
 from joieAPI.adhoc import ModelChoiceField, ImageField
@@ -46,6 +47,8 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
         read_only_fields = ('owner', 'create_at', 'create_by', 'update_at', 'update_by')
 
     def create(self, validated_data):
+        if validated_data.get('time_of_release') < date.today():
+            raise serializers.ValidationError('the release date must be today or a future date')
         job_type_name = validated_data.pop('job_list_type')
         job_list_type = JobListType.objects.get(list_type=job_type_name)
         owner_id = validated_data.pop('owner')
@@ -66,6 +69,22 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
         return instance
 
 
-class JobListSerializer(serializers.HyperlinkedModelSerializer):
-    pass
+class JobActiveSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    Manage the published jobs
+    Modify by Employers
+    Including copy as draft for an existing job, remove job to archive folder, view job applicants, approval
+    """
+    owner = serializers.StringRelatedField()
+    job_list_type = serializers.SlugRelatedField(read_only=True, slug_field='description')
+    applicants = serializers.SerializerMethodField(method_name='get_application_number')
+
+    class Meta:
+        model = Job
+        exclude = ('create_at', 'create_by', 'update_at', 'update_by', 'status')
+        read_only_fields = ('owner', 'applicants', 'time_of_published', 'time_of_release')
+
+    def get_application_number(self, obj):
+        return obj.get_applicant_number()
+
 

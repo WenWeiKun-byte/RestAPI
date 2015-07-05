@@ -28,7 +28,8 @@ router.register(r'employees', av.EmployeeViewSet)
 router.register(r'industry', av.IndustryViewSet)
 router.register(r'company', av.CompanyViewSet)
 router.register(r'joblisttype', jv.JobListTypeViewSet)
-router.register(r'job_draft', jv.DraftJobViewSet, base_name='job')
+router.register(r'job_draft', jv.DraftJobViewSet, base_name='job_draft')
+router.register(r'job_active', jv.ActiveJobViewSet, base_name='job_active')
 
 
 urlpatterns = [

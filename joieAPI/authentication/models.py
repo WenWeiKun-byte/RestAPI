@@ -16,7 +16,7 @@ class AccountManager(BaseUserManager):
             raise ValueError('Users must have a valid email address.')
         # username is not a necessary field
         # if not kwargs.get('username'):
-        #     raise ValueError('Users must have a valid username.')
+        # raise ValueError('Users must have a valid username.')
 
         user = self.model(
             email=self.normalize_email(email), **kwargs)
@@ -94,7 +94,9 @@ class User(AbstractBaseUser, JOIEUtil):
                                                'Unselect this instead of deleting accounts.'))
     STATUS = Choices('inactive', 'completed_profile', 'special_type_A', 'suspended', 'deleted', 'black_listed')
     status = StatusField(default=STATUS.inactive)
-    first_time_sign_in = models.BooleanField(default=False)
+    first_time_sign_in = models.BooleanField(default=True,
+                                             help_text=('when user new created, before the first login.'
+                                                        'during user first login, user need to update the necessary fields.'))
 
     objects = AccountManager()
 
@@ -122,7 +124,8 @@ class User(AbstractBaseUser, JOIEUtil):
 
 
 class SocialLink(models.Model):
-    networkName_choices = (('Facebook', 'Facebook'), ('Instagram', 'Instagram'), ('Twitter', 'Twitter'), ('LinkedIn', 'LinkedIn'))
+    networkName_choices = (
+        ('Facebook', 'Facebook'), ('Instagram', 'Instagram'), ('Twitter', 'Twitter'), ('LinkedIn', 'LinkedIn'))
     network_name = models.CharField(choices=networkName_choices, max_length=10)
     link = models.URLField()
 
@@ -201,7 +204,7 @@ class Employer(models.Model):
     company = models.OneToOneField(Company, related_name='employer')
 
     def __unicode__(self):
-        return self.user.USERNAME_FIELD
+        return '%s From %s ' % (self.user.email, self.company.company_name)
 
     class Meta:
         db_table = 'joie_employer'
@@ -266,7 +269,7 @@ class JOIE(models.Model):
         db_table = 'joie_joie'
 
     def __unicode__(self):
-        return self.user.USERNAME_FIELD
+        return self.user.email
 
     @receiver(post_save, sender=User)
     def create_profile_for_user(sender, instance=None, created=False, **kwargs):
