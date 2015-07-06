@@ -26,17 +26,17 @@ router = DefaultRouter()
 router.register(r'employers', av.EmployerViewSet)
 router.register(r'employees', av.EmployeeViewSet)
 router.register(r'industry', av.IndustryViewSet)
-router.register(r'company', av.CompanyViewSet)
 router.register(r'joblisttype', jv.JobListTypeViewSet)
 router.register(r'job_draft', jv.DraftJobViewSet, base_name='job_draft')
-router.register(r'job_active', jv.ActiveJobViewSet, base_name='job_active')
+router.register(r'job_active', jv.ActiveJobViewSet, base_name='job')
 
 
 urlpatterns = [
     url(r'^auth/me/$', av.UserView.as_view(), name='user'),
-    url(r'^auth/create/staff/$', av.StaffRegistrationView.as_view(), name='staff_create'),
+    url(r'^auth/create/admin/$', av.StaffRegistrationView.as_view(), name='admin_create'),
     url(r'^auth/', include('djoser.urls')),
     url(r'^auth/frontend/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', av.activate),
+    url(r'^auth/reset/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', av.ResetConfirmView.as_view()),
     url(r'^', include(router.urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

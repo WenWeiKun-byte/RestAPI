@@ -3,7 +3,7 @@ from jobs.models import Job, JobListType, Application
 from authentication.models import Employer, JOIE
 from datetime import date
 
-from authentication.serializers import Employer_For_Admin_Serializer
+from authentication.serializers import EmployerMeSerializer
 from joieAPI.adhoc import ModelChoiceField, ImageField
 
 
@@ -37,7 +37,7 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
     Created by Employers
     A job listing created by employers to allow JOIEs to apply
     """
-    owner = Employer_For_Admin_Serializer(read_only=True)   # TODO need change to other serializer
+    owner = EmployerMeSerializer(read_only=True)
     job_list_type = ModelChoiceField(choices=JobListType.objects.all().values_list('list_type', flat=True))
     promotion_banner = ImageField(allow_null=True, required=False)
 

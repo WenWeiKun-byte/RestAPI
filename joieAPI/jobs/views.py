@@ -6,14 +6,18 @@ from datetime import datetime, date
 from django.utils import timezone
 
 from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer
-from jobs.models import JobListType, Job
+from jobs.models import JobListType, Job, Employer, JOIE
 from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS, ReadDestroyViewSet
+from authentication.permissions import IsAdmin, IsEmployer, IsJOIE, IsActiveUser
 
 
 class JobListTypeViewSet(viewsets.ModelViewSet):
     """
     this view set is used by admin user for JobListType models management
     """
+    permission_classes = (
+        IsAdmin,
+    )
     serializer_class = JobListTypeSerializer
     queryset = JobListType.objects.all()
 
@@ -25,6 +29,16 @@ class DraftJobViewSet(viewsets.ModelViewSet):
     """
     serializer_class = JobDraftSerializer
     queryset = Job.objects.filter(status=Job.STATUS.draft)
+
+    permission_classes = (
+        IsActiveUser,
+        IsEmployer
+    )
+
+    def get_queryset(self):
+        user = self.request.user
+        emp = Employer.objects.get(user=user)
+        return Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today, owner=emp)
 
     def perform_create(self, serializer):
         owner = self.request.user.id
@@ -59,8 +73,19 @@ class ActiveJobViewSet(ReadDestroyViewSet):
     Modify by Employers
     Including copy as draft for an existing job, remove job to archive folder, view job applicants, approval
     """
+
     serializer_class = JobActiveSerializer
-    queryset = Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today)
+    # queryset = Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today)
+
+    permission_classes = (
+        IsActiveUser,
+        IsEmployer
+    )
+
+    def get_queryset(self):
+        user = self.request.user
+        emp = Employer.objects.get(user=user)
+        return Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today, owner=emp)
 
     @detail_route(methods=['post'])
     def copy(self, request, pk=None):

@@ -131,7 +131,7 @@ REST_FRAMEWORK = {
 DJOSER = {
     'DOMAIN': 'joie.com',
     'SITE_NAME': 'JOIE',
-    'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
+    'PASSWORD_RESET_CONFIRM_URL': '/auth/reset/{uid}/{token}',
     'SET_PASSWORD_RETYPE': True,
     'PASSWORD_RESET_CONFIRM_RETYPE': True,
     'ACTIVATION_URL': 'auth/frontend/{uid}/{token}',

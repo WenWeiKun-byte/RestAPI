@@ -189,7 +189,7 @@ class Company(models.Model):
     company_contact_person = models.CharField(max_length=40, blank=True)
     company_contact_detail = models.CharField(max_length=100, blank=True)
     company_logo = models.ImageField(upload_to='logo', max_length=100, blank=True, null=True)
-    credit_amount = models.FloatField(blank=True, null=True)
+    credit_amount = models.FloatField(default=0.00)
     industry = models.ForeignKey(Industry)
 
     class Meta:
@@ -256,12 +256,12 @@ class JOIE(models.Model):
     street_name = models.CharField(max_length=20, blank=True)
     unit_number = models.CharField(max_length=20, blank=True)
     postal_code = models.IntegerField(blank=True, null=True)
-    photo = models.ImageField(upload_to='photos', max_length=100, blank=True)
+    photo = models.ImageField(upload_to='photos', max_length=100, blank=True, null=True)
 
-    punctuality = models.FloatField(blank=True, null=True)
-    job_performance = models.FloatField(blank=True, null=True)
-    attitude = models.FloatField(blank=True, null=True)
-    rating = models.FloatField(blank=True, null=True)
+    punctuality = models.FloatField(default=0.0)
+    job_performance = models.FloatField(default=0.0)
+    attitude = models.FloatField(default=0.0)
+    rating = models.FloatField(default=0.0)
 
     referred_from = models.CharField(max_length=40, blank=True)
 
