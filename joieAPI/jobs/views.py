@@ -4,9 +4,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from datetime import datetime, date
 from django.utils import timezone
+from rest_framework_extensions.mixins import NestedViewSetMixin
 
-from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer
-from jobs.models import JobListType, Job, Employer, JOIE
+from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer, JobSerializer
+from jobs.models import JobListType, Job, Employer, JOIE, Application
 from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS, ReadDestroyViewSet
 from authentication.permissions import IsAdmin, IsEmployer, IsJOIE, IsActiveUser
 
@@ -28,7 +29,7 @@ class DraftJobViewSet(viewsets.ModelViewSet):
     including create, list, update, retrieve, delete
     """
     serializer_class = JobDraftSerializer
-    queryset = Job.objects.filter(status=Job.STATUS.draft)
+    # queryset = Job.objects.filter(status=Job.STATUS.draft)
 
     permission_classes = (
         IsActiveUser,
@@ -38,7 +39,7 @@ class DraftJobViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         emp = Employer.objects.get(user=user)
-        return Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today, owner=emp)
+        return Job.objects.filter(status=Job.STATUS.draft, owner=emp)
 
     def perform_create(self, serializer):
         owner = self.request.user.id
@@ -104,6 +105,7 @@ class ActiveJobViewSet(ReadDestroyViewSet):
                 new_draft.job_rate = current_job.job_rate
                 new_draft.promotion_banner = current_job.promotion_banner
                 new_draft.title = current_job.title
+                new_draft.detail = current_job.detail
                 new_draft.time_of_release = current_job.time_of_release
                 new_draft.save()
                 return Response({'status': 'new draft job saved'})
@@ -121,3 +123,36 @@ class ActiveJobViewSet(ReadDestroyViewSet):
         """
         instance.stats = Job.STATUS.archived
         instance.save()
+
+
+class JobViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = JobSerializer
+    queryset = Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today)
+
+    @detail_route(methods=['post'], permission_classes=[IsJOIE])
+    def apply(self, request, pk=None):
+        """
+        JOIE apply for an active JOB
+        :param request:
+        :param pk:
+        :return: create a new application if success.
+        """
+        serializer = ActionSerializer(data=request.data)
+        current_job = self.get_object()
+        account = self.request.user
+        if serializer.is_valid():
+            if serializer.data.pop('action') == AVAILABLE_ACTIONS['JOB_APPLY']:
+                joie = JOIE.objects.get(user=account)
+                application, created = Application.objects.get_or_create(applicant=joie, job=current_job)
+                if not created:
+                    return Response({'status': 'you have applied for this job before'})
+                return Response({'status': 'job apply successfully'})
+            else:
+                return Response({'status': 'action not supported'})
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+class ApplicationEmpViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
+    pass

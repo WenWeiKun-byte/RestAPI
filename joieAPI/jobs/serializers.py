@@ -37,12 +37,14 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
     Created by Employers
     A job listing created by employers to allow JOIEs to apply
     """
-    owner = EmployerMeSerializer(read_only=True)
+    # owner = EmployerMeSerializer(read_only=True)  # no need detail infos
+    owner = serializers.StringRelatedField()
     job_list_type = ModelChoiceField(choices=JobListType.objects.all().values_list('list_type', flat=True))
     promotion_banner = ImageField(allow_null=True, required=False)
 
     class Meta:
         model = Job
+        extra_kwargs = {'url': {'view_name': 'job_draft-detail'}}
         exclude = ('applicants', 'job_id', 'status', 'time_of_published')
         read_only_fields = ('owner', 'create_at', 'create_by', 'update_at', 'update_by')
 
@@ -57,9 +59,10 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
         return job
 
     def update(self, instance, validated_data):
-        job_type_name = validated_data.pop('job_list_type')
-        job_list_type = JobListType.objects.get(list_type=job_type_name)
-        instance.job_list_type = job_list_type
+        job_type_name = validated_data.pop('job_list_type', None)
+        if job_type_name:
+            job_list_type = JobListType.objects.get(list_type=job_type_name)
+            instance.job_list_type = job_list_type
         # deleting the image because has a None value
         if 'image' in validated_data and not validated_data['image']:
             validated_data.pop('image')
@@ -81,6 +84,7 @@ class JobActiveSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Job
+        extra_kwargs = {'url': {'view_name': 'job_active-detail'}}
         exclude = ('create_at', 'create_by', 'update_at', 'update_by', 'status')
         read_only_fields = ('owner', 'applicants', 'time_of_published', 'time_of_release')
 
@@ -88,3 +92,30 @@ class JobActiveSerializer(serializers.HyperlinkedModelSerializer):
         return obj.get_applicant_number()
 
 
+class JobSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    Jobs expose to joie
+    """
+    owner = serializers.StringRelatedField()
+    job_list_type = serializers.SlugRelatedField(read_only=True, slug_field='description')
+    applicants = serializers.SerializerMethodField(method_name='get_application_number')
+
+    class Meta:
+        model = Job
+        exclude = ('create_at', 'create_by', 'update_at', 'update_by', 'status')
+        read_only_fields = ('owner', 'applicants', 'time_of_published', 'time_of_release')
+
+    def get_application_number(self, obj):
+        return obj.get_applicant_number()
+
+
+class ApplicationEmpSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    application management for employer
+    """
+    applicant = serializers.StringRelatedField()
+
+    class Meta:
+        model = Application
+        exclude = ('job',)
+        read_only_fields = ('applicant', 'time_of_apply', 'status')
