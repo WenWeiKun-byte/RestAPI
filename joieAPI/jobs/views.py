@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, filters, mixins
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
@@ -6,10 +6,11 @@ from datetime import datetime, date
 from django.utils import timezone
 from rest_framework_extensions.mixins import NestedViewSetMixin
 
-from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer, JobSerializer
+from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer, JobSerializer, ApplicationEmpSerializer
 from jobs.models import JobListType, Job, Employer, JOIE, Application
 from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS, ReadDestroyViewSet
-from authentication.permissions import IsAdmin, IsEmployer, IsJOIE, IsActiveUser
+from authentication.permissions import IsAdmin, IsEmployer, IsJOIE, IsActiveUser, IsApplicationOwner
+from authentication.serializers import JOIEMESerializer
 
 
 class JobListTypeViewSet(viewsets.ModelViewSet):
@@ -68,7 +69,7 @@ class DraftJobViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class ActiveJobViewSet(ReadDestroyViewSet):
+class ActiveJobViewSet(NestedViewSetMixin, ReadDestroyViewSet):
     """
     Manage the published jobs
     Modify by Employers
@@ -155,4 +156,65 @@ class JobViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class ApplicationEmpViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
-    pass
+    serializer_class = ApplicationEmpSerializer
+    queryset = Application.objects.all()
+
+    permission_classes = (
+        IsApplicationOwner,
+    )
+
+    filter_backends = (filters.DjangoFilterBackend, )
+    filter_fields = ('status',)
+
+    @detail_route(methods=['post'])
+    def approve(self, request, pk=None, parent_lookup_job_id=None):
+        """
+        owner can approve the current application
+        :param request:
+        :param pk:
+        :return: change the application's status to 'approved' if success
+        """
+        serializer = ActionSerializer(data=request.data)
+        current_app = self.get_object()
+        if serializer.is_valid():
+            if serializer.data.pop('action') == AVAILABLE_ACTIONS['JOB_APPROVE']:
+                if current_app.status == Application.STATUS.pending:
+                    current_app.status = Application.STATUS.approved
+                    current_app.save()
+                    return Response({'status': 'application approve successfully'})
+                else:
+                    return Response({'status': 'it is not a pending application'})
+            else:
+                return Response({'status': 'action not supported'})
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    @detail_route(methods=['post'])
+    def reject(self, request, pk=None, parent_lookup_job_id=None):
+        """
+        owner can reject the current application
+        :param request:
+        :param pk:
+        :return: change the application's status to 'rejected' if success
+        """
+        serializer = ActionSerializer(data=request.data)
+        current_app = self.get_object()
+        if serializer.is_valid():
+            if serializer.data.pop('action') == AVAILABLE_ACTIONS['JOB_REJECT']:
+                if current_app.status == Application.STATUS.pending:
+                    current_app.status = Application.STATUS.rejected
+                    current_app.save()
+                    return Response({'status': 'application rejected'})
+                else:
+                    return Response({'status': 'it is not a pending application'})
+            else:
+                return Response({'status': 'action not supported'})
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+class ApplicantsViewSet(NestedViewSetMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = JOIEMESerializer
+    queryset = JOIE.objects.all()

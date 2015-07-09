@@ -3,7 +3,9 @@ from rest_framework import serializers, viewsets, mixins
 
 AVAILABLE_ACTIONS = {'JOB_PUBLISH': 'publish',
                      'JOB_COPY': 'copy',
-                     'JOB_APPLY': 'apply'
+                     'JOB_APPLY': 'apply',
+                     'JOB_APPROVE': 'approve',
+                     'JOB_REJECT': 'reject',
                      }
 
 

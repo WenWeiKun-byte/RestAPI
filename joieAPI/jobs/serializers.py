@@ -109,7 +109,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
         return obj.get_applicant_number()
 
 
-class ApplicationEmpSerializer(serializers.HyperlinkedModelSerializer):
+class ApplicationEmpSerializer(serializers.ModelSerializer):
     """
     application management for employer
     """
@@ -117,5 +117,7 @@ class ApplicationEmpSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Application
+        extra_kwargs = {'url': {'view_name': 'application-detail'}}
         exclude = ('job',)
         read_only_fields = ('applicant', 'time_of_apply', 'status')
+
