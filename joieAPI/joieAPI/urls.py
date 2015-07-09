@@ -40,6 +40,7 @@ router.register(r'job_active', jv.ActiveJobViewSet, base_name='job_active')\
               parents_query_lookups=['application__job', 'application'])
 
 router.register(r'jobs', jv.JobViewSet)
+router.register(r'applications', jv.ApplicationJOIEViewSet, base_name='joie_application')
 
 
 urlpatterns = [

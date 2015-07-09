@@ -6,7 +6,8 @@ from datetime import datetime, date
 from django.utils import timezone
 from rest_framework_extensions.mixins import NestedViewSetMixin
 
-from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer, JobSerializer, ApplicationEmpSerializer
+from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer, JobSerializer, \
+    ApplicationEmpSerializer, ApplicationJOIESerializer
 from jobs.models import JobListType, Job, Employer, JOIE, Application
 from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS, ReadDestroyViewSet
 from authentication.permissions import IsAdmin, IsEmployer, IsJOIE, IsActiveUser, IsApplicationOwner
@@ -156,6 +157,9 @@ class JobViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class ApplicationEmpViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for employers to manage the applications based on jobs
+    """
     serializer_class = ApplicationEmpSerializer
     queryset = Application.objects.all()
 
@@ -216,5 +220,32 @@ class ApplicationEmpViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
 
 
 class ApplicantsViewSet(NestedViewSetMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    payed employers can view the details info of the applicants
+    """
     serializer_class = JOIEMESerializer
     queryset = JOIE.objects.all()
+
+
+class ApplicationJOIEViewSet(ReadDestroyViewSet):
+    serializer_class = ApplicationJOIESerializer
+    permission_classes = (
+        IsJOIE,
+    )
+
+    def get_queryset(self):
+        user = self.request.user
+        joie = JOIE.objects.get(user=user)
+        return Application.objects.filter(applicant=joie)
+
+    def perform_destroy(self, instance):
+        """
+        only status 'pending' may be deleted
+        :param instance:
+        :return:
+        """
+        if instance.status == Application.STATUS.pending:
+            instance.delete()
+
+        else:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)

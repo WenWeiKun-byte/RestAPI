@@ -4,7 +4,7 @@ from authentication.models import Employer, JOIE
 from datetime import date
 
 from authentication.serializers import EmployerMeSerializer
-from joieAPI.adhoc import ModelChoiceField, ImageField
+from joieAPI.adhoc import ModelChoiceField, ImageField, ReadDestroyViewSet
 
 
 class JobListTypeSerializer(serializers.Serializer):
@@ -120,4 +120,21 @@ class ApplicationEmpSerializer(serializers.ModelSerializer):
         extra_kwargs = {'url': {'view_name': 'application-detail'}}
         exclude = ('job',)
         read_only_fields = ('applicant', 'time_of_apply', 'status')
+
+
+class ApplicationJOIESerializer(serializers.ModelSerializer):
+    """
+    application management for JOIE
+    JOIE may cancel the pending status jobs
+    """
+    job = JobSerializer(read_only=True)
+
+    class Meta:
+        model = Application
+        extra_kwargs = {'url': {'view_name': 'joie_application-detail'}}
+        exclude = ('applicant',)
+        read_only_fields = ('applicant', 'time_of_apply', 'status')
+
+
+
 
