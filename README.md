@@ -1,8 +1,7 @@
-
 ### How do I get set up? ###
 
 * Summary of set up
-* Configuration
+* Dependencies
 
 
 ```
@@ -19,7 +18,7 @@ pip install drf-extensions
 ```
 
 
-* Dependencies
+* Configuration
 * Database configuration
 * How to run tests
 * Deployment instructions
