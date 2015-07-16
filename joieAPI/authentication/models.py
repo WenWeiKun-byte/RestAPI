@@ -5,6 +5,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from model_utils.fields import StatusField
 from model_utils import Choices
+from django.conf import settings
 
 
 class AccountManager(BaseUserManager):
@@ -92,7 +93,7 @@ class User(AbstractBaseUser, JOIEUtil):
     is_active = models.BooleanField(default=False,
                                     help_text=('Designates whether this user should be treated as active.'
                                                'Unselect this instead of deleting accounts.'))
-    STATUS = Choices('inactive', 'completed_profile', 'special_type_A', 'suspended', 'deleted', 'black_listed')
+    STATUS = Choices(*settings.USER_STATUS)
     status = StatusField(default=STATUS.inactive)
     first_time_sign_in = models.BooleanField(default=True,
                                              help_text=('when user new created, before the first login.'

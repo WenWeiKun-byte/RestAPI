@@ -150,3 +150,6 @@ if DEBUG:
 TEMPLATE_DIRS = (
     os.path.join(os.path.dirname(__file__), 'templates').replace('\\','/'),
 )
+
+# user status pre-define
+USER_STATUS = ('inactive', 'completed_profile', 'special_type_A', 'suspended', 'deleted', 'black_listed')
