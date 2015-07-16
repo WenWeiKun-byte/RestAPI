@@ -153,3 +153,5 @@ TEMPLATE_DIRS = (
 
 # user status pre-define
 USER_STATUS = ('inactive', 'completed_profile', 'special_type_A', 'suspended', 'deleted', 'black_listed')
+
+JOB_STATUS = ('active', 'suspended', 'archived', 'suspended', 'draft')
