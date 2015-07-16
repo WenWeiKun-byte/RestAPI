@@ -101,7 +101,7 @@ class User(AbstractBaseUser, JOIEUtil):
     objects = AccountManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['app_user_type']
+    REQUIRED_FIELDS = []     # used by djoser
 
     class Meta:
         ordering = ('email',)

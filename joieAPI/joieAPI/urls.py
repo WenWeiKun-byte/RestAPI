@@ -45,6 +45,7 @@ router.register(r'applications', jv.ApplicationJOIEViewSet, base_name='joie_appl
 
 urlpatterns = [
     url(r'^auth/me/$', av.UserView.as_view(), name='user'),
+    url(r'^auth/register/$', av.UserRegistrationView.as_view(), name='register'),
     url(r'^auth/create/admin/$', av.StaffRegistrationView.as_view(), name='admin_create'),
     url(r'^auth/', include('djoser.urls')),
     url(r'^auth/frontend/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', av.activate),
