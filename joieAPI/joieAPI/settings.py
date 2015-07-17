@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'rest_framework.authtoken',
     'djoser',
     'authentication',
+    'jobs',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -111,10 +112,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-STATIC_ROOT = "/home/django/www/RestAPI/static/"
-MEDIA_ROOT = "/home/django/www/RestAPI/media/"
+STATIC_ROOT = "/tmp/django/www/RestAPI/static/"
+MEDIA_ROOT = "/tmp/django/www/RestAPI/media/"
 
-AUTH_USER_MODEL = 'authentication.Account'
+AUTH_USER_MODEL = 'authentication.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -130,7 +131,7 @@ REST_FRAMEWORK = {
 DJOSER = {
     'DOMAIN': 'joie.com',
     'SITE_NAME': 'JOIE',
-    'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
+    'PASSWORD_RESET_CONFIRM_URL': '/auth/reset/{uid}/{token}',
     'SET_PASSWORD_RETYPE': True,
     'PASSWORD_RESET_CONFIRM_RETYPE': True,
     'ACTIVATION_URL': 'auth/frontend/{uid}/{token}',
@@ -149,3 +150,8 @@ if DEBUG:
 TEMPLATE_DIRS = (
     os.path.join(os.path.dirname(__file__), 'templates').replace('\\','/'),
 )
+
+# user status pre-define
+USER_STATUS = ('inactive', 'completed_profile', 'special_type_A', 'suspended', 'deleted', 'black_listed')
+
+JOB_STATUS = ('active', 'suspended', 'archived', 'suspended', 'draft')

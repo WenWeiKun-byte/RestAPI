@@ -1,36 +1,23 @@
 import json
 from django.http import HttpResponse
-from rest_framework import filters
+from rest_framework import filters, response, status
 from rest_framework import viewsets
 from rest_framework import mixins, generics, permissions
 from rest_framework.test import APIClient
 from rest_framework.exceptions import PermissionDenied
+from djoser import utils
+from djoser.serializers import PasswordRetypeSerializer
+from djoser.views import RegistrationView
 
-from .serializers import Employee_For_Admin_Serializer, Employee_For_Staff_Serializer, AccountSerializer, \
-    Employer_For_Admin_Serializer, Employer_For_Staff_Serializer, Account_Employee_Serializer, Account_Employer_Serializer
-from .models import EmployerProfile, EmployeeProfile, Account
-from .permissions import IsAdmin, IsStaff
+from .serializers import AccountAdminSerializer, BaseJOIESerializer, JOIEAdminSerializer, \
+    BaseEmployerSerializer, EmployerMeSerializer, JOIEMESerializer, \
+    UserRegistrationSerializer, StaffRegistrationSerializer, IndustrySerializer
+from .models import Employer, JOIE, User, Industry, Company
+from .permissions import IsActiveUser, IsSuperAdmin, IsAccountOwner, IsAdmin
 
 
-# class EmployerList(generics.ListAPIView):
-# queryset = Account.objects.all()
-#     serializer_class = EmployerSerializer
-#
-#
-# class EmployerDetail(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Account.objects.all()
-#     serializer_class = EmployerSerializer
-#
-#
-# class EmployeeList(generics.ListAPIView):
-#     queryset = Account.objects.all()
-#     serializer_class = EmployeeSerializer
-#
-#
-# class EmployeeDetail(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Account.objects.all()
-#     serializer_class = EmployeeSerializer
-# =============use viewset
+USER_TYPE = {'JOIE': 'JOIE', 'EMPLOYER': 'Employer'}
+
 
 def activate(request, uid, token):
     client = APIClient(enforce_csrf_checks=True)
@@ -40,6 +27,51 @@ def activate(request, uid, token):
         return HttpResponse('account activated')
     else:
         return HttpResponse('account activated fail')
+
+
+class UserRegistrationView(RegistrationView):
+    def get_serializer_class(self):
+        return UserRegistrationSerializer
+
+
+class ResetConfirmView(utils.ActionViewMixin, generics.GenericAPIView):
+    """
+    Use this endpoint to change user password.
+    """
+
+    def get_serializer_class(self):
+        return PasswordRetypeSerializer
+
+    def post(self, request, **kwargs):
+        serializer = self.get_serializer(data=request.DATA)
+        if serializer.is_valid():
+            return self.action(serializer, **kwargs)
+        else:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def action(self, serializer, **kwargs):
+        uid = kwargs.get('uid')
+        token = kwargs.get('token')
+        pwd = serializer.data['new_password']
+        client = APIClient(enforce_csrf_checks=True)
+        r = client.post('/auth/password/reset/confirm/', {'uid': uid, 'token': token, 'new_password': pwd, 're_new_password': pwd})
+        if r:
+            return HttpResponse('password reset failed - %s' % json.loads(r.content))
+        else:
+            return HttpResponse('password reset succeed')
+
+class IndustryViewSet(viewsets.ModelViewSet):
+    """
+    this view set is used by admin user for Industry models management
+    """
+    permission_classes = (
+        IsAdmin,
+    )
+    serializer_class = IndustrySerializer
+    queryset = Industry.objects.all()
 
 
 class NoCreateViewSet(mixins.ListModelMixin,
@@ -60,152 +92,121 @@ class EmployerViewSet(NoCreateViewSet):
     """
     This viewset automatically provides `list` and `detail` actions.
     """
-    # def partial_update(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = self.serialize(instance, data=request.data, partial=True)
-    #     serializer.is_valid(raise_exception=True)
-    #     new_instance = serializer.save()
-    #     return Response(serializer.data)
-    queryset = EmployerProfile.objects.all()
+
+    queryset = Employer.objects.all()
 
     permission_classes = (
         permissions.IsAuthenticated,
     )
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter, )
-    filter_fields = ('status', 'user__username')
-    search_fields = ('user__username', 'user__email')
+    filter_fields = ('user__status', 'user__first_time_sign_in')
+    search_fields = ('user__last_name', 'user__email')
 
     def get_serializer_class(self):
-        if self.request.user.is_staff:
-            if self.request.user.is_admin:
-                return Employer_For_Admin_Serializer
-            return Employer_For_Staff_Serializer
+        if self.request.user.is_admin:
+            if self.request.user.is_superAdmin:
+                return BaseEmployerSerializer
+            return BaseEmployerSerializer
         else:
             raise PermissionDenied
 
-    def perform_update(self, serializer):
-        user = self.request.user
-        instance = serializer.save(last_edited_by=user.email)
-        checklist = [instance.company_name is not '',
-                     instance.roc_number is not '',
-                     instance.business_type is not '',
-                     instance.company_address is not '',
-                     instance.company_postal_code is not None,
-                     instance.company_contact_person is not '',
-                     instance.company_contact_detail is not '',
-                     instance.company_logo is not '',
-                     ]
-        if instance.status == '1' and all(checklist):
-            serializer.save(status='2')  # completed Profile
-        if instance.status == '2' and not all(checklist):
-            serializer.save(status='1')  # completed Profile
+    def perform_destroy(self, instance):
+        """
+        will not delete the user object, but update the status to deleted
+        :param instance: current user
+        :return:
+        """
+        instance.stats = User.STATUS.deleted
+        instance.save()
 
 
 class EmployeeViewSet(NoCreateViewSet):
     """
     This viewset automatically provides `list` and `detail` actions.
     """
-    queryset = EmployeeProfile.objects.all()
+    queryset = JOIE.objects.all()
 
     permission_classes = (
         permissions.IsAuthenticated,
     )
 
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter, )
+    filter_fields = ('user__status', 'user__first_time_sign_in')
+    search_fields = ('user__last_name', 'user__email')
+
     def get_serializer_class(self):
-        if self.request.user.is_staff:
-            if self.request.user.is_admin:
-                return Employee_For_Admin_Serializer
-            return Employee_For_Staff_Serializer
+        if self.request.user.is_admin:
+            if self.request.user.is_superAdmin:
+                return BaseJOIESerializer
+            return JOIEAdminSerializer
         else:
             raise PermissionDenied
 
-    def perform_update(self, serializer):
-        user = self.request.user
-        instance = serializer.save(last_edited_by=user.email)
-        checklist = [instance.nric_num is not '',
-                     instance.name_on_nric is not '',
-                     instance.nric_type is not '',
-                     instance.date_of_birth is not '',
-                     instance.preferred_name is not None,
-                     instance.photo is not '',
-                     instance.gender is not '',
-                     instance.contact_number is not '',
-                     instance.block_building is not '',
-                     instance.street_name is not '',
-                     instance.unit_number is not '',
-                     instance.postal_code is not None,
-                     ]
-        if instance.status == '1' and all(checklist):
-            serializer.save(status='2')  # completed Profile
-        if instance.status == '2' and not all(checklist):
-            serializer.save(status='1')  # completed Profile
+    def perform_destroy(self, instance):
+        """
+        will not delete the user object, but update the status to deleted
+        :param instance: current user
+        :return:
+        """
+        instance.stats = User.STATUS.deleted
+        instance.save()
 
 
 class UserView(generics.RetrieveUpdateAPIView):
     """
     override /me Use this endpoint to retrieve/update user.
     """
-    model = Account
+
     permission_classes = (
         permissions.IsAuthenticated,
+        IsActiveUser,
+        IsAccountOwner
     )
 
     def get_object(self, *args, **kwargs):
-        obj = self.request.user
-        self.check_object_permissions(self.request, obj)
+        account = self.request.user
+        obj = None
+        self.check_object_permissions(self.request, account)
+        if account.app_user_type == USER_TYPE['EMPLOYER']:
+            obj = Employer.objects.get(user=account)
+        elif account.app_user_type == USER_TYPE['JOIE']:
+            obj = JOIE.objects.get(user=account)
+        else:
+            obj = account
         return obj
 
     def get_serializer_class(self):
         obj = self.request.user
-        if obj.app_user_type == 'Employer':
-            return Account_Employer_Serializer
-        if obj.app_user_type == 'Employee':
-            return Account_Employee_Serializer
-        return AccountSerializer
+        if obj.app_user_type == USER_TYPE['EMPLOYER']:
+            return EmployerMeSerializer
+        if obj.app_user_type == USER_TYPE['JOIE']:
+            return JOIEMESerializer
+        return AccountAdminSerializer
 
     def perform_update(self, serializer):
         user = self.request.user
-        print '-----------%s' % user.email
-        instance = serializer.save(last_edited_by=user.email)
-        print 'b4 update'
-        print instance.employer_profile.status
-        if user.app_user_type == 'Employee':
-            checklist = [instance.employee_profile.nric_num is not '',
-                         instance.employee_profile.name_on_nric is not '',
-                         instance.employee_profile.nric_type is not '',
-                         instance.employee_profile.date_of_birth is not '',
-                         instance.employee_profile.preferred_name is not None,
-                         instance.employee_profile.photo is not '',
-                         instance.employee_profile.gender is not '',
-                         instance.employee_profile.contact_number is not '',
-                         instance.employee_profile.block_building is not '',
-                         instance.employee_profile.street_name is not '',
-                         instance.employee_profile.unit_number is not '',
-                         instance.employee_profile.postal_code is not None,
-                         ]
-            if instance.employee_profile.status == '1' and all(checklist):
-                serializer.save(employee_profile__status='2')  # completed Profile
-            if instance.employee_profile.status == '2' and not all(checklist):
-                serializer.save(employee_profile__status='1')  # completed Profile
-        if user.app_user_type == 'Employer':
-            checklist = [instance.employer_profile.company_name is not '',
-                         instance.employer_profile.roc_number is not '',
-                         instance.employer_profile.business_type is not '',
-                         instance.employer_profile.company_address is not '',
-                         instance.employer_profile.company_postal_code is not None,
-                         instance.employer_profile.company_contact_person is not '',
-                         instance.employer_profile.company_contact_detail is not '',
-                         instance.employer_profile.company_logo is not '',
-                         ]
-            if instance.employer_profile.status == '1' and all(checklist):
-                print 'i am in '
-                print serializer
-                instance.employer_profile.status = '2'
-                serializer.save()  # completed Profile
-                print instance.employer_profile.status
-            if instance.employer_profile.status == '2' and not all(checklist):
-                print 'i am in again'
-                serializer.save(employer_profile__status='1')  # completed Profile
-        print 'after update'
-        print instance.employer_profile.status
+        instance = serializer.save(update_by=user.email)
+        # if all the required fields updated, change status from inactive to completed_profile
+        if self.request.method == 'PUT' and instance.status == User.STATUS.inactive:
+            instance.status = User.STATUS.completed_profile
+        if instance.first_time_sign_in:
+            instance.first_time_sign_in = False  # change the first time sign in flag
+        serializer.save()  # completed Profile
+
+
+class StaffRegistrationView(generics.CreateAPIView):
+    """
+    this view used for admin user to create staff users
+    """
+    model = User
+    permission_classes = (
+        permissions.IsAuthenticated,
+        IsSuperAdmin
+    )
+    serializer_class = StaffRegistrationSerializer
+
+    def perform_create(self, serializer):
+        creator = self.request.user.email
+        serializer.save(create_by=creator)
+
