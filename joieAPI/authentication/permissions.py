@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from .models import Employer
 
 UNAVAILABLE_LIST = ['suspended', 'deleted', 'black_listed']
 
@@ -51,3 +52,17 @@ class IsJOIE(permissions.BasePermission):
         if request.user:
             return request.user.app_user_type == 'JOIE'
         return False
+
+
+class IsApplicationOwner(permissions.BasePermission):
+    """
+    user can only access his own applications info
+    """
+    def has_permission(self, request, view):
+        permission = True
+        if request.user:
+            emp = Employer.objects.get(user=request.user)
+            for application in view.get_queryset():
+                if application.job.owner != emp:
+                    permission = False
+        return permission

@@ -7,10 +7,11 @@ from rest_framework.test import APIClient
 from rest_framework.exceptions import PermissionDenied
 from djoser import utils
 from djoser.serializers import PasswordRetypeSerializer
+from djoser.views import RegistrationView
 
 from .serializers import AccountAdminSerializer, BaseJOIESerializer, JOIEAdminSerializer, \
     BaseEmployerSerializer, EmployerMeSerializer, JOIEMESerializer, \
-    AccountMeSerializer, StaffRegistrationSerializer, IndustrySerializer
+    UserRegistrationSerializer, StaffRegistrationSerializer, IndustrySerializer
 from .models import Employer, JOIE, User, Industry, Company
 from .permissions import IsActiveUser, IsSuperAdmin, IsAccountOwner, IsAdmin
 
@@ -28,12 +29,9 @@ def activate(request, uid, token):
         return HttpResponse('account activated fail')
 
 
-# def reset_confirm(request, uid, token):
-#     client = APIClient(enforce_csrf_checks=True)
-#     response = client.post('/auth/password/reset/confirm/', {'uid': uid, 'token': token})
-#     r = json.loads(response.content)
-#     print r
-#     return HttpResponse('pass')
+class UserRegistrationView(RegistrationView):
+    def get_serializer_class(self):
+        return UserRegistrationSerializer
 
 
 class ResetConfirmView(utils.ActionViewMixin, generics.GenericAPIView):

@@ -2,6 +2,7 @@ from django.db import models
 from authentication.models import Employer, JOIEUtil, JOIE
 from model_utils.fields import StatusField
 from model_utils import Choices
+from django.conf import settings
 
 
 class JobListType(models.Model):
@@ -44,7 +45,7 @@ class Job(JOIEUtil, models.Model):
     title = models.CharField(max_length=50)
     detail = models.TextField()
     promotion_banner = models.ImageField(upload_to='banner', max_length=100, blank=True, null=True)
-    STATUS = Choices('active', 'suspended', 'archived', 'suspended', 'draft')
+    STATUS = Choices(*settings.JOB_STATUS)
     status = StatusField(default=STATUS.draft)
     job_rate = models.FloatField()
 

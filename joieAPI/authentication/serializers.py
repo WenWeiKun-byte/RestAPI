@@ -1,7 +1,28 @@
 from rest_framework import serializers
+from djoser.serializers import AbstractUserRegistrationSerializer
 
 from .models import JOIE, Employer, User, Industry, Company, SocialLink, Financial
 from joieAPI.adhoc import ModelChoiceField, ImageField
+
+
+class UserRegistrationSerializer(AbstractUserRegistrationSerializer):
+    """
+    override default registration serializer, separate the the need of REQUIRED_FIELDS
+    """
+    class Meta(AbstractUserRegistrationSerializer.Meta):
+        model = User
+        fields = (
+            User.USERNAME_FIELD,
+            User._meta.pk.name,
+            'password',
+            'app_user_type',
+        )
+        write_only_fields = (
+            'password',
+        )
+
+    def create(self, validated_data):
+            return User.objects.create_user(**validated_data)
 
 
 class SocialLinkSerializer(serializers.ModelSerializer):
