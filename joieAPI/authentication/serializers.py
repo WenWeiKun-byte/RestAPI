@@ -114,13 +114,13 @@ class CompanySerializer(serializers.ModelSerializer):
     """
 
     industry = ModelChoiceField(choices=Industry.objects.all().values_list('name', flat=True))
-    company_logo = ImageField(allow_null=True, required=False)
+    logo = ImageField(allow_null=True, required=False)
 
     # required fields
-    company_name = serializers.CharField(max_length=100, required=True)
-    roc_number = serializers.CharField(max_length=40, required=True)
+    name = serializers.CharField(max_length=100, required=True)
+    roc = serializers.CharField(max_length=40, required=True)
     business_type = serializers.ChoiceField(choices=[('Direct', 'Direct'), ('Agency', 'Agency')], required=True)
-    ea_number = serializers.CharField(max_length=40, required=True)
+    ea = serializers.CharField(max_length=40, required=True)
     credit_amount = serializers.FloatField(required=True)
 
     class Meta:
@@ -128,7 +128,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
     def get_validation_exclusions(self):
         exclusions = super(CompanySerializer, self).get_validation_exclusions()
-        return exclusions + ['company_postal_code']
+        return exclusions + ['postal_code']
 
     def create(self, validated_data):
         industry_name = validated_data.pop('industry')

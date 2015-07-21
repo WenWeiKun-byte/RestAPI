@@ -186,17 +186,17 @@ class Company(models.Model):
     """
     oneToOne relationship with employer model
     """
-    company_name = models.CharField(max_length=100, blank=True)
-    roc_number = models.CharField(max_length=40, blank=True)
+    name = models.CharField(max_length=100, blank=True)
+    roc = models.CharField(max_length=40, blank=True)
     business_type_choices = (('Direct', 'Direct'), ('Agency', 'Agency'))
     business_type = models.CharField(choices=business_type_choices, blank=True, max_length=10)
-    ea_number = models.CharField(max_length=40, blank=True)
-    company_address = models.CharField(max_length=100, blank=True)
-    company_postal_code = models.IntegerField(blank=True, null=True)
-    company_description = models.CharField(max_length=100, blank=True)
-    company_contact_person = models.CharField(max_length=40, blank=True)
-    company_contact_detail = models.CharField(max_length=100, blank=True)
-    company_logo = models.ImageField(upload_to='logo', max_length=100, blank=True, null=True)
+    ea = models.CharField(max_length=40, blank=True)
+    address = models.CharField(max_length=100, blank=True)
+    postal_code = models.IntegerField(blank=True, null=True)
+    description = models.CharField(max_length=100, blank=True)
+    # company_contact_person = models.CharField(max_length=40, blank=True)
+    contact = models.CharField(max_length=100, blank=True)
+    logo = models.ImageField(upload_to='logo', max_length=100, blank=True, null=True)
     credit_amount = models.FloatField(default=0.00)
     industry = models.ForeignKey(Industry)
 
@@ -204,7 +204,7 @@ class Company(models.Model):
         db_table = 'joie_company'
 
     def __unicode__(self):
-        return self.company_name
+        return self.name
 
 
 class Employer(models.Model):
