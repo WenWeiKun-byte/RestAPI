@@ -238,8 +238,8 @@ class Employer(models.Model):
 
 
 class Financial(models.Model):
-    bank_number = models.IntegerField(null=True, blank=True)
-    branch_number = models.IntegerField(null=True, blank=True)
+    bank_code = models.IntegerField(null=True, blank=True)
+    branch_code = models.IntegerField(null=True, blank=True)
     account_number = models.IntegerField(null=True, blank=True)
 
     class Meta:
@@ -250,28 +250,28 @@ class JOIE(models.Model):
     user = models.OneToOneField(User, related_name='joie_profile')
     financial_detail = models.OneToOneField(Financial, blank=True, related_name='joie')
 
-    nric_num = models.CharField(max_length=20, blank=True)
-    name_on_nric = models.CharField(max_length=40, blank=True)
+    nric = models.CharField(max_length=20, blank=True)
+    nric_name = models.CharField(max_length=40, blank=True)
     nric_type_choices = (('Singaporean', 'Singaporean'), ('PR', 'PR'))
     nric_type = models.CharField(choices=nric_type_choices, blank=True, max_length=20)
     date_of_birth = models.DateField(blank=True, null=True)
-    preferred_name = models.CharField(max_length=40, blank=True)
+    # preferred_name = models.CharField(max_length=40, blank=True)
     gender_choices = ((0, 'Male'), (1, 'Female'))
     gender = models.CharField(choices=gender_choices, blank=True, max_length=10)
     contact_number = models.CharField(max_length=20, blank=True)
 
-    block_building = models.CharField(max_length=20, blank=True)
-    street_name = models.CharField(max_length=20, blank=True)
-    unit_number = models.CharField(max_length=20, blank=True)
+    block = models.CharField(max_length=20, blank=True)
+    street = models.CharField(max_length=20, blank=True)
+    unit = models.CharField(max_length=20, blank=True)
     postal_code = models.IntegerField(blank=True, null=True)
     photo = models.ImageField(upload_to='photos', max_length=100, blank=True, null=True)
 
     punctuality = models.FloatField(default=0.0)
-    job_performance = models.FloatField(default=0.0)
+    performance = models.FloatField(default=0.0)
     attitude = models.FloatField(default=0.0)
     rating = models.FloatField(default=0.0)
 
-    referred_from = models.CharField(max_length=40, blank=True)
+    referral = models.CharField(max_length=40, blank=True)
 
     class Meta:
         db_table = 'joie_joie'
