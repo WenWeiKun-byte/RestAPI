@@ -34,8 +34,9 @@ class DraftJobViewSet(viewsets.ModelViewSet):
     # queryset = Job.objects.filter(status=Job.STATUS.draft)
 
     permission_classes = (
-        IsActiveUser,
-        IsEmployer
+        IsEmployer,
+        IsActiveUser,   # user should be in completed_profile status
+
     )
 
     def get_queryset(self):
@@ -44,8 +45,8 @@ class DraftJobViewSet(viewsets.ModelViewSet):
         return Job.objects.filter(status=Job.STATUS.draft, owner=emp)
 
     def perform_create(self, serializer):
-        owner = self.request.user.id
-        serializer.save(owner=owner)
+        owner_user = self.request.user
+        serializer.save(owner_user=owner_user)
 
     @detail_route(methods=['post'])
     def publish(self, request, pk=None):
@@ -81,8 +82,9 @@ class ActiveJobViewSet(NestedViewSetMixin, ReadDestroyViewSet):
     # queryset = Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today)
 
     permission_classes = (
+        IsEmployer,
         IsActiveUser,
-        IsEmployer
+
     )
 
     def get_queryset(self):

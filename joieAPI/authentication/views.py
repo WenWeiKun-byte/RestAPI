@@ -13,7 +13,7 @@ from .serializers import AccountAdminSerializer, BaseJOIESerializer, JOIEAdminSe
     BaseEmployerSerializer, EmployerMeSerializer, JOIEMESerializer, \
     UserRegistrationSerializer, StaffRegistrationSerializer, IndustrySerializer
 from .models import Employer, JOIE, User, Industry, Company
-from .permissions import IsActiveUser, IsSuperAdmin, IsAccountOwner, IsAdmin
+from .permissions import IsActiveUser, IsSuperAdmin, IsAccountOwner, IsAdmin, IsAvailableUser
 
 
 USER_TYPE = {'JOIE': 'JOIE', 'EMPLOYER': 'Employer'}
@@ -160,7 +160,7 @@ class UserView(generics.RetrieveUpdateAPIView):
 
     permission_classes = (
         permissions.IsAuthenticated,
-        IsActiveUser,
+        IsAvailableUser,
         IsAccountOwner
     )
 
@@ -186,12 +186,16 @@ class UserView(generics.RetrieveUpdateAPIView):
 
     def perform_update(self, serializer):
         user = self.request.user
-        instance = serializer.save(update_by=user.email)
+        instance = serializer.save()
+        if isinstance(instance, Employer) or isinstance(instance, JOIE):
+            instance.user.update_by = user.email
         # if all the required fields updated, change status from inactive to completed_profile
-        if self.request.method == 'PUT' and instance.status == User.STATUS.inactive:
-            instance.status = User.STATUS.completed_profile
-        if instance.first_time_sign_in:
-            instance.first_time_sign_in = False  # change the first time sign in flag
+            if self.request.method == 'PUT' and int(instance.user.status) == User.STATUS.inactive:
+                instance.user.status = User.STATUS.completed_profile
+            if instance.user.first_time_sign_in:
+                instance.user.first_time_sign_in = False  # change the first time sign in flag
+        else:
+            serializer.save(update_by=user.email)
         serializer.save()  # completed Profile
 
 

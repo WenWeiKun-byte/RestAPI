@@ -41,6 +41,8 @@ class AccountManager(BaseUserManager):
         account.is_superAdmin = True
         account.is_active = True
         account.app_user_type = None
+        account.status = User.STATUS.completed_profile
+        account.first_time_sign_in = False
         account.save()
 
         return account
@@ -58,6 +60,8 @@ class AccountManager(BaseUserManager):
         account.is_admin = True
         account.is_active = True
         account.app_user_type = None
+        account.status = User.STATUS.completed_profile
+        account.first_time_sign_in = False
         account.save()
 
         return account
@@ -120,8 +124,11 @@ class User(AbstractBaseUser, JOIEUtil):
     def get_user_type(self):
         return self.app_user_type
 
-    def is_first_time_sign_in(self):
+    def first_sign_in(self):
         return self.first_time_sign_in
+
+    def get_last_login(self):
+        return self.last_login
 
 
 class SocialLink(models.Model):

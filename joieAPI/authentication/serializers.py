@@ -47,11 +47,16 @@ class AccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
+        first_sign_in = serializers.SerializerMethodField(method_name='first_sign_in')
+
         fields = (
             'email', 'first_name', 'last_name', 'app_user_type', 'socialLinks', 'create_at', 'create_by', 'update_at',
-            'update_by', 'status')
+            'update_by', 'last_login', 'first_sign_in', 'status', )
         read_only_fields = (
             'email', 'create_at', 'create_by', 'update_at', 'update_by', 'app_user_type',)
+
+    def first_sign_in(self, obj):
+        return obj.first_sign_in()
 
     def update(self, instance, validated_data):
         user = instance

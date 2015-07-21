@@ -16,8 +16,4 @@ class TokenAuth(TokenAuthentication):
         # last login time update
         token.user.last_login = timezone.now()
         token.user.save(update_fields=['last_login'])
-        # first login indicate update
-        if not token.user.first_time_sign_in:
-            token.user.first_time_sign_in = True
-            token.user.save(update_fields=['first_time_sign_in'])
         return (token.user, token)
