@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from django.utils.translation import ugettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -152,6 +153,19 @@ TEMPLATE_DIRS = (
 )
 
 # user status pre-define
-USER_STATUS = ('inactive', 'completed_profile', 'special_type_A', 'suspended', 'deleted', 'black_listed')
+# format: ((database representation),(Python identifier),(human-readable description))
+# to get the description of the status, use: status_description = User.STATUS[user.status]
+USER_STATUS = ((1, 'inactive', _('Inactive (Only registered Email and Password)')),
+               (2, 'completed_profile', _('Completed Profile (All fields except Optional Fields)')),
+               (3, 'special_type_A', _('Special Type A (Access rights)')),
+               (8, 'suspended', _('user suspended')),
+               (9, 'deleted', _('user have been deleted')),
+               (0, 'black_listed', _('Black Listed (Can be set by Super Admin or Admin)'))
+               )
 
-JOB_STATUS = ('active', 'suspended', 'archived', 'suspended', 'draft')
+
+JOB_STATUS = ((1, 'active', _('Active (show on Job listing page)')),
+              (8, 'suspended', _('Job suspended')),
+              (9, 'archive', _('Job Archived')),
+              (0, 'draft', _('Draft (Only viewable by Creator)'))
+              )

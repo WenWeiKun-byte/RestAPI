@@ -53,8 +53,8 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
             raise serializers.ValidationError('the release date must be today or a future date')
         job_type_name = validated_data.pop('job_list_type')
         job_list_type = JobListType.objects.get(list_type=job_type_name)
-        owner_id = validated_data.pop('owner')
-        owner = Employer.objects.get(id=owner_id)
+        owner_user = validated_data.pop('owner_user')
+        owner = Employer.objects.get(user=owner_user)
         job = Job.objects.create(owner=owner, job_list_type=job_list_type, **validated_data)
         return job
 

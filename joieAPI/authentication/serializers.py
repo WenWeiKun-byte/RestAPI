@@ -47,11 +47,16 @@ class AccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
+        first_sign_in = serializers.SerializerMethodField(method_name='first_sign_in')
+
         fields = (
             'email', 'first_name', 'last_name', 'app_user_type', 'socialLinks', 'create_at', 'create_by', 'update_at',
-            'update_by', 'status')
+            'update_by', 'last_login', 'first_sign_in', 'status', )
         read_only_fields = (
-            'email', 'create_at', 'create_by', 'update_at', 'update_by', 'app_user_type',)
+            'email', 'create_at', 'create_by', 'update_at', 'update_by', 'app_user_type', 'last_login')
+
+    def first_sign_in(self, obj):
+        return obj.first_sign_in()
 
     def update(self, instance, validated_data):
         user = instance
@@ -88,9 +93,9 @@ class AccountAdminSerializer(AccountSerializer):
         model = User
         fields = (
             'email', 'first_name', 'last_name', 'create_at', 'create_by', 'update_at',
-            'update_by')
+            'update_by', 'last_login')
         read_only_fields = (
-            'email', 'create_at', 'create_by', 'update_at', 'update_by', )
+            'email', 'create_at', 'create_by', 'update_at', 'update_by', 'last_login')
 
 
 class IndustrySerializer(serializers.HyperlinkedModelSerializer):
@@ -109,13 +114,13 @@ class CompanySerializer(serializers.ModelSerializer):
     """
 
     industry = ModelChoiceField(choices=Industry.objects.all().values_list('name', flat=True))
-    company_logo = ImageField(allow_null=True, required=False)
+    logo = ImageField(allow_null=True, required=False)
 
     # required fields
-    company_name = serializers.CharField(max_length=100, required=True)
-    roc_number = serializers.CharField(max_length=40, required=True)
+    name = serializers.CharField(max_length=100, required=True)
+    roc = serializers.CharField(max_length=40, required=True)
     business_type = serializers.ChoiceField(choices=[('Direct', 'Direct'), ('Agency', 'Agency')], required=True)
-    ea_number = serializers.CharField(max_length=40, required=True)
+    ea = serializers.CharField(max_length=40, required=True)
     credit_amount = serializers.FloatField(required=True)
 
     class Meta:
@@ -123,7 +128,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
     def get_validation_exclusions(self):
         exclusions = super(CompanySerializer, self).get_validation_exclusions()
-        return exclusions + ['company_postal_code']
+        return exclusions + ['postal_code']
 
     def create(self, validated_data):
         industry_name = validated_data.pop('industry')
@@ -188,7 +193,7 @@ class FinancialSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Financial
-        fields = ('bank_number', 'branch_number', 'account_number')
+        fields = ('bank_code', 'branch_code', 'account_number')
 
 
 class BaseJOIESerializer(serializers.HyperlinkedModelSerializer):
@@ -200,8 +205,8 @@ class BaseJOIESerializer(serializers.HyperlinkedModelSerializer):
     financial_detail = FinancialSerializer(required=False)
 
     # required fields
-    nric_num = serializers.CharField(max_length=20, required=True)
-    name_on_nric = serializers.CharField(max_length=40, required=True)
+    nric = serializers.CharField(max_length=20, required=True)
+    nric_name = serializers.CharField(max_length=40, required=True)
     nric_type = serializers.ChoiceField(choices=[('Singaporean', 'Singaporean'), ('PR', 'PR')], required=True)
     date_of_birth = serializers.DateField(required=True)
     gender = serializers.ChoiceField(choices=[(0, 'Male'), (1, 'Female')], required=True)
@@ -211,13 +216,15 @@ class BaseJOIESerializer(serializers.HyperlinkedModelSerializer):
         model = JOIE
 
     def update(self, instance, validated_data):
-        user_data = validated_data.get('user', None)  # in case of partial update, it could be None
-        financial_data = validated_data.get('financial_detail', None)
+        user_data = validated_data.pop('user', None)  # in case of partial update, it could be None
+        financial_data = validated_data.pop('financial_detail', None)
         if user_data:
             instance.user = AccountSerializer().update(instance.user, user_data)
         # financial object created during JOIE object creation
         if financial_data:
             instance.financial_detail = FinancialSerializer().update(instance.financial_detail, financial_data)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
         return instance
 
@@ -237,7 +244,7 @@ class JOIEMESerializer(BaseJOIESerializer):
     financial_detail = FinancialSerializer(required=False)
 
     punctuality = serializers.FloatField(read_only=True)
-    job_performance = serializers.FloatField(read_only=True)
+    performance = serializers.FloatField(read_only=True)
     attitude = serializers.FloatField(read_only=True)
     rating = serializers.FloatField(read_only=True)
 

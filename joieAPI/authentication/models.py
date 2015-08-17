@@ -41,6 +41,8 @@ class AccountManager(BaseUserManager):
         account.is_superAdmin = True
         account.is_active = True
         account.app_user_type = None
+        account.status = User.STATUS.completed_profile
+        account.first_time_sign_in = False
         account.save()
 
         return account
@@ -58,6 +60,8 @@ class AccountManager(BaseUserManager):
         account.is_admin = True
         account.is_active = True
         account.app_user_type = None
+        account.status = User.STATUS.completed_profile
+        account.first_time_sign_in = False
         account.save()
 
         return account
@@ -120,8 +124,11 @@ class User(AbstractBaseUser, JOIEUtil):
     def get_user_type(self):
         return self.app_user_type
 
-    def is_first_time_sign_in(self):
+    def first_sign_in(self):
         return self.first_time_sign_in
+
+    def get_last_login(self):
+        return self.last_login
 
 
 class SocialLink(models.Model):
@@ -179,17 +186,17 @@ class Company(models.Model):
     """
     oneToOne relationship with employer model
     """
-    company_name = models.CharField(max_length=100, blank=True)
-    roc_number = models.CharField(max_length=40, blank=True)
+    name = models.CharField(max_length=100, blank=True)
+    roc = models.CharField(max_length=40, blank=True)
     business_type_choices = (('Direct', 'Direct'), ('Agency', 'Agency'))
     business_type = models.CharField(choices=business_type_choices, blank=True, max_length=10)
-    ea_number = models.CharField(max_length=40, blank=True)
-    company_address = models.CharField(max_length=100, blank=True)
-    company_postal_code = models.IntegerField(blank=True, null=True)
-    company_description = models.CharField(max_length=100, blank=True)
-    company_contact_person = models.CharField(max_length=40, blank=True)
-    company_contact_detail = models.CharField(max_length=100, blank=True)
-    company_logo = models.ImageField(upload_to='logo', max_length=100, blank=True, null=True)
+    ea = models.CharField(max_length=40, blank=True)
+    address = models.CharField(max_length=100, blank=True)
+    postal_code = models.IntegerField(blank=True, null=True)
+    description = models.CharField(max_length=100, blank=True)
+    # company_contact_person = models.CharField(max_length=40, blank=True)
+    contact = models.CharField(max_length=100, blank=True)
+    logo = models.ImageField(upload_to='logo', max_length=100, blank=True, null=True)
     credit_amount = models.FloatField(default=0.00)
     industry = models.ForeignKey(Industry)
 
@@ -197,7 +204,7 @@ class Company(models.Model):
         db_table = 'joie_company'
 
     def __unicode__(self):
-        return self.company_name
+        return self.name
 
 
 class Employer(models.Model):
@@ -231,8 +238,8 @@ class Employer(models.Model):
 
 
 class Financial(models.Model):
-    bank_number = models.IntegerField(null=True, blank=True)
-    branch_number = models.IntegerField(null=True, blank=True)
+    bank_code = models.IntegerField(null=True, blank=True)
+    branch_code = models.IntegerField(null=True, blank=True)
     account_number = models.IntegerField(null=True, blank=True)
 
     class Meta:
@@ -243,28 +250,28 @@ class JOIE(models.Model):
     user = models.OneToOneField(User, related_name='joie_profile')
     financial_detail = models.OneToOneField(Financial, blank=True, related_name='joie')
 
-    nric_num = models.CharField(max_length=20, blank=True)
-    name_on_nric = models.CharField(max_length=40, blank=True)
+    nric = models.CharField(max_length=20, blank=True)
+    nric_name = models.CharField(max_length=40, blank=True)
     nric_type_choices = (('Singaporean', 'Singaporean'), ('PR', 'PR'))
     nric_type = models.CharField(choices=nric_type_choices, blank=True, max_length=20)
     date_of_birth = models.DateField(blank=True, null=True)
-    preferred_name = models.CharField(max_length=40, blank=True)
+    # preferred_name = models.CharField(max_length=40, blank=True)
     gender_choices = ((0, 'Male'), (1, 'Female'))
     gender = models.CharField(choices=gender_choices, blank=True, max_length=10)
     contact_number = models.CharField(max_length=20, blank=True)
 
-    block_building = models.CharField(max_length=20, blank=True)
-    street_name = models.CharField(max_length=20, blank=True)
-    unit_number = models.CharField(max_length=20, blank=True)
+    block = models.CharField(max_length=20, blank=True)
+    street = models.CharField(max_length=20, blank=True)
+    unit = models.CharField(max_length=20, blank=True)
     postal_code = models.IntegerField(blank=True, null=True)
     photo = models.ImageField(upload_to='photos', max_length=100, blank=True, null=True)
 
     punctuality = models.FloatField(default=0.0)
-    job_performance = models.FloatField(default=0.0)
+    performance = models.FloatField(default=0.0)
     attitude = models.FloatField(default=0.0)
     rating = models.FloatField(default=0.0)
 
-    referred_from = models.CharField(max_length=40, blank=True)
+    referral = models.CharField(max_length=40, blank=True)
 
     class Meta:
         db_table = 'joie_joie'

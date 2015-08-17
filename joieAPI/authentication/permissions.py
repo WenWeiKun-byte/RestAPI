@@ -1,7 +1,8 @@
 from rest_framework import permissions
-from .models import Employer
+from .models import Employer, User
 
-UNAVAILABLE_LIST = ['suspended', 'deleted', 'black_listed']
+UNAVAILABLE_LIST = [User.STATUS.suspended, User.STATUS.deleted, User.STATUS.black_listed]
+INACTIVE_LIST = [User.STATUS.inactive, User.STATUS.suspended, User.STATUS.deleted, User.STATUS.black_listed]
 
 
 class IsAccountOwner(permissions.BasePermission):
@@ -32,11 +33,23 @@ class IsSuperAdmin(permissions.BasePermission):
 
 class IsActiveUser(permissions.BasePermission):
     """
-    only active user can access the base functions
+    only active user can access the job functions
     """
     def has_permission(self, request, view):
         if request.user:
-            return request.user.status not in UNAVAILABLE_LIST
+            check = int(request.user.status) not in INACTIVE_LIST
+            return check
+        return False
+
+
+class IsAvailableUser(permissions.BasePermission):
+    """
+    only available user can access the base functions
+    """
+    def has_permission(self, request, view):
+        if request.user:
+            check = int(request.user.status) not in UNAVAILABLE_LIST
+            return check
         return False
 
 
