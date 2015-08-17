@@ -1,4 +1,5 @@
 from django.db import models
+from django.core import validators
 from authentication.models import Employer, JOIEUtil, JOIE
 from model_utils.fields import StatusField
 from model_utils import Choices
@@ -44,14 +45,24 @@ class Job(JOIEUtil, models.Model):
 
     title = models.CharField(max_length=50)
     detail = models.TextField()
+    job_rate = models.FloatField()
+    postal_code = models.TextField(validators=[
+        validators.RegexValidator(r'^(\d{6},?)*\d{6}$',
+                                  'Example format will be 123456,654321 or just 123456', 'invalid'),
+    ])
+
+    keywords = models.TextField(blank=True, validators=[
+        validators.RegexValidator(r'^(\w+,?){0,4}\w+$',
+                                  'Up to a limit of 5 keywords, separated by a comma.', 'invalid'),
+    ])
+    short_description = models.TextField(blank=True)
     promotion_banner = models.ImageField(upload_to='banner', max_length=100, blank=True, null=True)
     STATUS = Choices(*settings.JOB_STATUS)
     status = StatusField(default=STATUS.draft)
-    job_rate = models.FloatField()
-
-    time_of_published = models.DateTimeField(blank=True, null=True)
+    time_of_publish = models.DateTimeField(blank=True, null=True)
     # release date will not accurate to Time, easy for cronjob
-    time_of_release = models.DateField()
+    time_of_release = models.DateField(blank=True, null=True)
+    # Empty field will denotes job be published indefinitely.
 
     class Meta:
         db_table = 'joie_job'
@@ -78,4 +89,9 @@ class Application(models.Model):
         db_table = 'joie_application'
 
 
+class SupportImage(models.Model):
+    image = models.ImageField()
+    job = models.ForeignKey(Job, related_name='support_image')
 
+    class Meta:
+        db_table = 'joie_job_support_image'

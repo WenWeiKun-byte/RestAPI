@@ -61,6 +61,7 @@ class AccountSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         user = instance
         socialLinks_data = validated_data.pop('socialLinks', None)
+        print socialLinks_data
         if socialLinks_data:
             # user.socialLinks.clear()
             SocialLink.objects.filter(user=user).delete()

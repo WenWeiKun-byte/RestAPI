@@ -59,7 +59,7 @@ class DraftJobViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             if serializer.data.pop('action') == AVAILABLE_ACTIONS['JOB_PUBLISH']:
                 draft_job.status = Job.STATUS.active
-                draft_job.time_of_published = timezone.now()
+                draft_job.time_of_publish = timezone.now()
                 now = datetime.now().strftime('%Y%m%d%H%M%S%f') + '%s' % pk
                 draft_job.job_id = now
                 draft_job.save()

@@ -212,7 +212,7 @@ class Employer(models.Model):
     company = models.OneToOneField(Company, related_name='employer')
 
     def __unicode__(self):
-        return '%s From %s ' % (self.user.email, self.company.company_name)
+        return '%s From %s ' % (self.user.email, self.company.name)
 
     class Meta:
         db_table = 'joie_employer'
