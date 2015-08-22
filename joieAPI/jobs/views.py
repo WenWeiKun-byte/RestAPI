@@ -8,7 +8,7 @@ from rest_framework_extensions.mixins import NestedViewSetMixin
 
 from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer, JobSerializer, \
     ApplicationEmpSerializer, ApplicationJOIESerializer
-from jobs.models import JobListType, Job, Employer, JOIE, Application
+from jobs.models import JobListType, Job, Employer, JOIE, Application, SupportImage
 from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS, ReadDestroyViewSet
 from authentication.permissions import IsAdmin, IsEmployer, IsJOIE, IsActiveUser, IsApplicationOwner
 from authentication.serializers import JOIEMESerializer
@@ -111,6 +111,12 @@ class ActiveJobViewSet(NestedViewSetMixin, ReadDestroyViewSet):
                 new_draft.title = current_job.title
                 new_draft.detail = current_job.detail
                 new_draft.time_of_release = current_job.time_of_release
+                new_draft.short_description = current_job.short_description
+                if current_job.support_image.all():
+                    for image in current_job.support_image:
+                        SupportImage.objects.create(job=new_draft, image=image.image)
+                new_draft.postal_code = current_job.postal_code
+                new_draft.keywords = current_job.keywords
                 new_draft.save()
                 return Response({'status': 'new draft job saved'})
             else:
@@ -221,11 +227,14 @@ class ApplicationEmpViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-class ApplicantsViewSet(NestedViewSetMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ApplicantsViewSet(NestedViewSetMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     payed employers can view the details info of the applicants
     """
     serializer_class = JOIEMESerializer
+    permission_classes = (
+        IsEmployer,
+    )
     queryset = JOIE.objects.all()
 
 

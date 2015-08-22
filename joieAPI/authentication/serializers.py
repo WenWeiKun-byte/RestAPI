@@ -60,9 +60,8 @@ class AccountSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         user = instance
-        socialLinks_data = validated_data.pop('socialLinks', None)
-        print socialLinks_data
-        if socialLinks_data:
+        socialLinks_data = validated_data.pop('socialLinks', 'empty')
+        if socialLinks_data and socialLinks_data != 'empty':
             # user.socialLinks.clear()
             SocialLink.objects.filter(user=user).delete()
             for socialLink_data in socialLinks_data:
@@ -72,6 +71,9 @@ class AccountSerializer(serializers.ModelSerializer):
                     socialLink.save()
                 except SocialLink.DoesNotExist:
                     SocialLink.objects.create(user=user, **socialLink_data)
+        elif socialLinks_data != 'empty':
+            # got the key and the value is null, means the use want to remove the values
+            SocialLink.objects.filter(user=user).delete()
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()

@@ -72,8 +72,19 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
         return job
 
     def update(self, instance, validated_data):
+        job = instance
         job_type_name = validated_data.pop('job_list_type', None)
         time_of_release = validated_data.get('time_of_release', None)
+        support_images = validated_data.pop('support_image', 'empty')
+        if support_images and support_images != 'empty':
+            SupportImage.objects.filter(job=job).delete()
+            if len(support_images) > 6:
+                raise serializers.ValidationError('May upload up to 6 support images')
+            for support_image_data in support_images:
+                SupportImage.objects.create(job=job, **support_image_data)
+        elif support_images != 'empty':
+            # got the key and the value is null, means the use want to remove the values
+            SupportImage.objects.filter(job=job).delete()
         if time_of_release is not None and time_of_release < date.today():
             raise serializers.ValidationError('the release date must be today or a future date')
         if job_type_name:
@@ -97,6 +108,7 @@ class JobActiveSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.StringRelatedField()
     job_list_type = serializers.SlugRelatedField(read_only=True, slug_field='description')
     applicants = serializers.SerializerMethodField(method_name='get_application_number')
+    support_image = SupportImageSerializer(many=True, required=False)
 
     class Meta:
         model = Job
@@ -115,6 +127,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.StringRelatedField()
     job_list_type = serializers.SlugRelatedField(read_only=True, slug_field='description')
     applicants = serializers.SerializerMethodField(method_name='get_application_number')
+    support_image = SupportImageSerializer(many=True, required=False)
 
     class Meta:
         model = Job

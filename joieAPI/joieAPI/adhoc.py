@@ -11,7 +11,7 @@ AVAILABLE_ACTIONS = {'JOB_PUBLISH': 'publish',
 
 class ModelChoiceField(serializers.ChoiceField):
     """
-    new serializers field for model choice
+    new serializers.py field for model choice
     """
     def to_representation(self, value):
         if value in ('', None):
