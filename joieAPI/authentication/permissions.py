@@ -19,14 +19,14 @@ class IsAccountOwner(permissions.BasePermission):
 
 class IsAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.user and not request.user.is_anonymous:
+        if request.user and not request.user.is_anonymous():
             return request.user.is_admin
         return False
 
 
 class IsSuperAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.user and not request.user.is_anonymous:
+        if request.user and not request.user.is_anonymous():
             return request.user.is_superAdmin
         return False
 
@@ -36,7 +36,7 @@ class IsActiveUser(permissions.BasePermission):
     only active user can access the job functions
     """
     def has_permission(self, request, view):
-        if request.user and not request.user.is_anonymous:
+        if request.user and not request.user.is_anonymous():
             check = int(request.user.status) not in INACTIVE_LIST
             return check
         return False
@@ -47,7 +47,7 @@ class IsAvailableUser(permissions.BasePermission):
     only available user can access the base functions
     """
     def has_permission(self, request, view):
-        if request.user and not request.user.is_anonymous:
+        if request.user and not request.user.is_anonymous():
             check = int(request.user.status) not in UNAVAILABLE_LIST
             return check
         return False
@@ -55,14 +55,15 @@ class IsAvailableUser(permissions.BasePermission):
 
 class IsEmployer(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.user and not request.user.is_anonymous:
+        if request.user and not request.user.is_anonymous():
             return request.user.app_user_type == 'Employer'
         return False
 
 
 class IsJOIE(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.user and not request.user.is_anonymous:
+        if request.user and not request.user.is_anonymous():
+            print 'in'
             return request.user.app_user_type == 'JOIE'
         return False
 
