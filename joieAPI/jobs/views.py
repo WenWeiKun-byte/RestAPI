@@ -12,6 +12,7 @@ from jobs.models import JobListType, Job, Employer, JOIE, Application, SupportIm
 from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS, ReadDestroyViewSet
 from authentication.permissions import IsAdmin, IsEmployer, IsJOIE, IsActiveUser, IsApplicationOwner
 from authentication.serializers import JOIEMESerializer
+from timesheet.models import CoyJOIEDB
 
 
 class JobListTypeViewSet(viewsets.ModelViewSet):
@@ -193,6 +194,11 @@ class ApplicationEmpViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
                 if current_app.status == Application.STATUS.pending:
                     current_app.status = Application.STATUS.approved
                     current_app.save()
+                    # then add JOIE to the DB or the company
+                    company = current_app.job.owner.company
+                    joie = current_app.applicant
+                    job_rate = current_app.job.job_rate
+                    CoyJOIEDB.objects.get_or_create(company=company, joie=joie, job_rate=job_rate)
                     return Response({'status': 'application approve successfully'})
                 else:
                     return Response({'status': 'it is not a pending application'})

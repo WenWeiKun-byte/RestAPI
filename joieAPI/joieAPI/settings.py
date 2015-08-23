@@ -43,6 +43,7 @@ INSTALLED_APPS = (
     'djoser',
     'authentication',
     'jobs',
+    'timesheet',
 )
 
 MIDDLEWARE_CLASSES = (

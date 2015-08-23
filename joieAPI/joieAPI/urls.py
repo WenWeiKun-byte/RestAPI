@@ -20,6 +20,7 @@ from django.conf.urls.static import static
 from rest_framework_extensions.routers import ExtendedDefaultRouter
 from authentication import views as av
 from jobs import views as jv
+from timesheet import views as tv
 
 
 # Create a router and register our viewsets with it.
@@ -41,6 +42,7 @@ router.register(r'job_active', jv.ActiveJobViewSet, base_name='job_active')\
 
 router.register(r'jobs', jv.JobViewSet)
 router.register(r'applications', jv.ApplicationJOIEViewSet, base_name='joie_application')
+router.register(r'joiedb', tv.CoyJOIEDBViewSet, base_name='joiedb')
 
 
 urlpatterns = [
