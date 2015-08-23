@@ -43,6 +43,7 @@ router.register(r'job_active', jv.ActiveJobViewSet, base_name='job_active')\
 router.register(r'jobs', jv.JobViewSet)
 router.register(r'applications', jv.ApplicationJOIEViewSet, base_name='joie_application')
 router.register(r'joiedb', tv.CoyJOIEDBViewSet, base_name='joiedb')
+router.register(r'timesheet', tv.Joie_Timesheet_ViewSet, base_name='timesheet-joie')
 
 
 urlpatterns = [
