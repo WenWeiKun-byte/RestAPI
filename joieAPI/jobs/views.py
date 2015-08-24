@@ -132,7 +132,7 @@ class ActiveJobViewSet(NestedViewSetMixin, ReadDestroyViewSet):
         :param instance: current job
         :return:
         """
-        instance.stats = Job.STATUS.archived
+        instance.status = Job.STATUS.archived
         instance.save()
 
 

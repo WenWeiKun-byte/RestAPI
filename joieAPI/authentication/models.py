@@ -186,7 +186,7 @@ class Company(models.Model):
     """
     oneToOne relationship with employer model
     """
-    name = models.CharField(max_length=100, blank=True)
+    name = models.CharField(max_length=100, blank=True, unique=True, null=True)
     roc = models.CharField(max_length=40, blank=True)
     business_type_choices = (('Direct', 'Direct'), ('Agency', 'Agency'))
     business_type = models.CharField(choices=business_type_choices, blank=True, max_length=10)

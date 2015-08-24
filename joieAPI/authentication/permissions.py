@@ -63,7 +63,6 @@ class IsEmployer(permissions.BasePermission):
 class IsJOIE(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user and not request.user.is_anonymous():
-            print 'in'
             return request.user.app_user_type == 'JOIE'
         return False
 

@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, validators
 from djoser.serializers import AbstractUserRegistrationSerializer
 
 from .models import JOIE, Employer, User, Industry, Company, SocialLink, Financial
@@ -120,7 +120,7 @@ class CompanySerializer(serializers.ModelSerializer):
     logo = ImageField(allow_null=True, required=False)
 
     # required fields
-    name = serializers.CharField(max_length=100, required=True)
+    name = serializers.CharField(max_length=100, required=True, validators=[validators.UniqueValidator(queryset=Company.objects.all())])
     roc = serializers.CharField(max_length=40, required=True)
     business_type = serializers.ChoiceField(choices=[('Direct', 'Direct'), ('Agency', 'Agency')], required=True)
     ea = serializers.CharField(max_length=40, required=True)

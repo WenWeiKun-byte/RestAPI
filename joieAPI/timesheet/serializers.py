@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from timesheet.models import CoyJOIEDB, TimeSheet, FeedBack
 from authentication.serializers import CompanySerializer, JOIEMESerializer
-from authentication.models import JOIE, User
+from authentication.models import JOIE, User, Company
 from joieAPI.adhoc import ModelChoiceField
 
 
@@ -40,50 +40,49 @@ class CoyJOIEDBSerializer(serializers.HyperlinkedModelSerializer):
         return instance
 
 
-class TimeSheet_Joie_Serializer(serializers.ModelSerializer):
-    # def get_joie_db(self):
-    #     user = self.context['request'].user
-    #     joie = JOIE.objects.get(user=user)
-    #     # return CoyJOIEDB.objects.filter(joie=joie).values_list('company', flat=True)
-    #     return CoyJOIEDB.objects.filter(joie=joie)
-    # coy_joie_db = ModelChoiceField(choices=get_joie_db())
-    # coy_joie_db = serializers.SerializerMethodField('get_joie_db')
+class TimeSheet_Joie_Serializer(serializers.HyperlinkedModelSerializer):
 
-    # print coy_joie_db
-
-    # coy_joie_db = ModelChoiceField(choices=joie_db)
     def __init__(self, *args, **kwargs):
-        # joie = self.context['request'].user
-        # print joie
-        # print self.joie_db
 
-        # self.joie_db = None
         super(TimeSheet_Joie_Serializer, self).__init__(*args, **kwargs)
         user = self.context['request'].user
         joie = JOIE.objects.get(user=user)
-        # print CoyJOIEDB.objects.filter(joie=joie).values_list('company__name', flat=True)
-        # joie_db =
-        self.fields['coy_joie_db'] = ModelChoiceField(choices=CoyJOIEDB.objects.filter(joie=joie).values_list('company__name', flat=True))
-        # self.coy_joie_db. = ModelChoiceField(CoyJOIEDB.objects.filter(joie=joie).values_list('company__name', flat=True))
 
-    # coy_joie_db = ModelChoiceField(choices=joie_db)
-    # coy_joie_db = CoyJOIEDBSerializer(required=False)
+        self.fields['coy_joie_db'] = ModelChoiceField(choices=CoyJOIEDB.objects.filter(joie=joie).values_list('company__name', flat=True))
+
     class Meta:
         model = TimeSheet
         extra_kwargs = {'url': {'view_name': 'timesheet-joie-detail'}}
-        exclude = ('joie', 'feedback', 'status')
-        # include = ('id', 'remark')
-
-
-
-    # def get_joie_db(self):
-    #     user = self.context['request'].user
-    #     joie = JOIE.objects.get(user=user)
-    #     return CoyJOIEDB.objects.filter(joie=joie).values_list('company', flat=True)
+        exclude = ('joie', 'feedback', )
+        read_only_fields = ('status',)
 
     def create(self, validated_data):
         joie = validated_data.pop('joie', None)
-        coy_joie_db = validated_data.pop('coy_joie_db', None)
+        company_name = validated_data.pop('coy_joie_db', None)  # we provide the company name for use to choice
+        company = Company.objects.get(name=company_name)
+        coy_joie_db = CoyJOIEDB.objects.get(joie=joie, company=company)
         feedback = validated_data.pop('feedback', None)
         timesheet = TimeSheet.objects.create(joie=joie, coy_joie_db=coy_joie_db, feedback=feedback, **validated_data)
-        return  timesheet
+        return timesheet
+
+    def update(self, instance, validated_data):
+        """
+        use can only update the draft timesheet;
+        timesheet that have submitted cannot change
+        :param instance:
+        :param validated_data:
+        :return:
+        """
+        timesheet = instance
+        if timesheet.status != TimeSheet.STATUS.draft:
+            raise serializers.ValidationError('only draft timesheet can be updated')
+        company_name = validated_data.pop('coy_joie_db', None)
+        if company_name:
+            company = Company.objects.get(name=company_name)
+            coy_joie_db = CoyJOIEDB.objects.get(joie=instance.joie, company=company)
+            timesheet.coy_joie_db = coy_joie_db
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
