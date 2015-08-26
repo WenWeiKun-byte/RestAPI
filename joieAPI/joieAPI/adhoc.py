@@ -6,6 +6,7 @@ AVAILABLE_ACTIONS = {'JOB_PUBLISH': 'publish',
                      'JOB_APPLY': 'apply',
                      'JOB_APPROVE': 'approve',
                      'JOB_REJECT': 'reject',
+                     'TIMESHEET_SUBMIT': 'submit'
                      }
 
 
@@ -39,6 +40,17 @@ class ActionSerializer(serializers.Serializer):
 class ReadDestroyViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.DestroyModelMixin,
+                           viewsets.GenericViewSet):
+    """
+    A viewset that provides default `list()`, 'destroy()' and `retrieve()` actions.
+    use for actived job management
+    """
+    pass
+
+
+class RetrieveUpdateViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.UpdateModelMixin,
                            viewsets.GenericViewSet):
     """
     A viewset that provides default `list()`, 'destroy()' and `retrieve()` actions.

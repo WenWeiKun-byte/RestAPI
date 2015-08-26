@@ -49,7 +49,7 @@ class TimeSheet(models.Model):
     clock_out = models.DateTimeField()
     break_duration = models.PositiveIntegerField()  # cannot use break keyword
     remarks = models.TextField()  # JOIE can write feedback to emp
-    feedback = models.OneToOneField(FeedBack)
+    feedback = models.OneToOneField(FeedBack, related_name='timesheet')
 
     STATUS = Choices('approved', 'pending', 'rejected', 'draft', 'archived')
     status = StatusField(default=STATUS.draft)

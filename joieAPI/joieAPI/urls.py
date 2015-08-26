@@ -30,11 +30,11 @@ router.register(r'employees', av.EmployeeViewSet)
 router.register(r'industry', av.IndustryViewSet)
 router.register(r'joblisttype', jv.JobListTypeViewSet)
 router.register(r'job_draft', jv.DraftJobViewSet, base_name='job_draft')
-router.register(r'job_active', jv.ActiveJobViewSet, base_name='job_active')\
+router.register(r'job_active', jv.ActiveJobViewSet, base_name='job_active') \
     .register(r'applications',
               jv.ApplicationEmpViewSet,
               base_name='application',
-              parents_query_lookups=['job_id'])\
+              parents_query_lookups=['job_id']) \
     .register(r'applicants',
               jv.ApplicantsViewSet,
               base_name='applicant',
@@ -43,16 +43,20 @@ router.register(r'job_active', jv.ActiveJobViewSet, base_name='job_active')\
 router.register(r'jobs', jv.JobViewSet)
 router.register(r'applications', jv.ApplicationJOIEViewSet, base_name='joie_application')
 router.register(r'joiedb', tv.CoyJOIEDBViewSet, base_name='joiedb')
-router.register(r'timesheet', tv.Joie_Timesheet_ViewSet, base_name='timesheet-joie')
-
+router.register(r'timesheet', tv.Joie_Timesheet_ViewSet, base_name='timesheet-joie') \
+    .register(r'feedback',
+              tv.FeedBackViewSet,
+              base_name='feedback',
+              parents_query_lookups=[
+                  'timesheet'])
 
 urlpatterns = [
-    url(r'^auth/me/$', av.UserView.as_view(), name='user'),
-    url(r'^auth/register/$', av.UserRegistrationView.as_view(), name='register'),
-    url(r'^auth/create/admin/$', av.StaffRegistrationView.as_view(), name='admin_create'),
-    url(r'^auth/', include('djoser.urls')),
-    url(r'^auth/frontend/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', av.activate),
-    url(r'^auth/reset/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', av.ResetConfirmView.as_view()),
-    url(r'^', include(router.urls)),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+                  url(r'^auth/me/$', av.UserView.as_view(), name='user'),
+                  url(r'^auth/register/$', av.UserRegistrationView.as_view(), name='register'),
+                  url(r'^auth/create/admin/$', av.StaffRegistrationView.as_view(), name='admin_create'),
+                  url(r'^auth/', include('djoser.urls')),
+                  url(r'^auth/frontend/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', av.activate),
+                  url(r'^auth/reset/(?P<uid>[a-zA-Z0-9]+)/(?P<token>[a-zA-Z0-9-]+)', av.ResetConfirmView.as_view()),
+                  url(r'^', include(router.urls)),
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

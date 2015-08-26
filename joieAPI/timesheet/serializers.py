@@ -3,8 +3,12 @@ from timesheet.models import CoyJOIEDB, TimeSheet, FeedBack
 from authentication.serializers import CompanySerializer, JOIEMESerializer
 from authentication.models import JOIE, User, Company
 from joieAPI.adhoc import ModelChoiceField
+from authentication.serializers import BaseJOIESerializer
 
 
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeedBack
 
 class CoyJOIEDBSerializer(serializers.HyperlinkedModelSerializer):
 
@@ -42,6 +46,8 @@ class CoyJOIEDBSerializer(serializers.HyperlinkedModelSerializer):
 
 class TimeSheet_Joie_Serializer(serializers.HyperlinkedModelSerializer):
 
+    feedback = FeedbackSerializer(required=False)
+
     def __init__(self, *args, **kwargs):
 
         super(TimeSheet_Joie_Serializer, self).__init__(*args, **kwargs)
@@ -53,8 +59,8 @@ class TimeSheet_Joie_Serializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = TimeSheet
         extra_kwargs = {'url': {'view_name': 'timesheet-joie-detail'}}
-        exclude = ('joie', 'feedback', )
-        read_only_fields = ('status',)
+        exclude = ('joie', )
+        read_only_fields = ('status', 'feedback')
 
     def create(self, validated_data):
         joie = validated_data.pop('joie', None)
@@ -86,3 +92,18 @@ class TimeSheet_Joie_Serializer(serializers.HyperlinkedModelSerializer):
         instance.save()
         return instance
 
+
+class TimeSheet_Emp_Serializer(serializers.HyperlinkedModelSerializer):
+
+    joie = BaseJOIESerializer(required=False)
+
+    class Meta:
+        """
+        emp
+        can modify clock_in,clock_out,break_duration
+
+        """
+        model = TimeSheet
+        extra_kwargs = {'url': {'view_name': 'timesheet-joie-detail'}}
+        exclude = ('status', 'feedback', 'coy_joie_db')
+        read_only_fields = ('remarks', 'joie',)
