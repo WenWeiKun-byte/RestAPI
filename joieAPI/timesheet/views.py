@@ -111,7 +111,7 @@ class Joie_Timesheet_ViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
 class FeedBackViewSet(NestedViewSetMixin, RetrieveUpdateViewSet):
     """
-    payed employers can view the details info of the applicants
+    FeedBack view
     """
     serializer_class = FeedbackSerializer
     permission_classes = (

@@ -1,5 +1,5 @@
 from rest_framework import serializers, viewsets, mixins
-
+from rest_framework.pagination import PageNumberPagination
 
 AVAILABLE_ACTIONS = {'JOB_PUBLISH': 'publish',
                      'JOB_COPY': 'copy',
@@ -57,3 +57,9 @@ class RetrieveUpdateViewSet(mixins.RetrieveModelMixin,
     use for actived job management
     """
     pass
+
+
+class JoiePagination(PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'PAGE_SIZE'
+    max_page_size = 1000
