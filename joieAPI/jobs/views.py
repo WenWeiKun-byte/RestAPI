@@ -59,11 +59,26 @@ class DraftJobViewSet(viewsets.ModelViewSet):
         serializer = ActionSerializer(data=request.data)
         if serializer.is_valid():
             if serializer.data.pop('action') == AVAILABLE_ACTIONS['JOB_PUBLISH']:
-                draft_job.status = Job.STATUS.active
-                draft_job.time_of_publish = timezone.now()
                 now = datetime.now().strftime('%Y%m%d%H%M%S%f') + '%s' % pk
-                draft_job.job_id = now
-                draft_job.save()
+
+                job_to_publish = Job()
+                job_to_publish.owner = draft_job.owner
+                job_to_publish.time_of_publish = timezone.now()
+                job_to_publish.job_id = now
+                job_to_publish.job_list_type = draft_job.job_list_type
+                job_to_publish.status = Job.STATUS.active
+                job_to_publish.job_rate = draft_job.job_rate
+                job_to_publish.promotion_banner = draft_job.promotion_banner
+                job_to_publish.title = draft_job.title
+                job_to_publish.detail = draft_job.detail
+                job_to_publish.time_of_release = draft_job.time_of_release
+                job_to_publish.short_description = draft_job.short_description
+                if job_to_publish.support_image.all():
+                    for image in draft_job.support_image:
+                        SupportImage.objects.create(job=draft_job, image=image.image)
+                job_to_publish.postal_code = draft_job.postal_code
+                job_to_publish.keywords = draft_job.keywords
+                job_to_publish.save()
                 return Response({'status': 'job published'})
             else:
                 return Response({'status': 'action not supported'})
@@ -93,38 +108,38 @@ class ActiveJobViewSet(NestedViewSetMixin, ReadDestroyViewSet):
         emp = Employer.objects.get(user=user)
         return Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today, owner=emp)
 
-    @detail_route(methods=['post'])
-    def copy(self, request, pk=None):
-        """
-        copy the current job as a draft
-
-        """
-        serializer = ActionSerializer(data=request.data)
-        current_job = self.get_object()
-        if serializer.is_valid():
-            if serializer.data.pop('action') == AVAILABLE_ACTIONS['JOB_COPY']:
-                new_draft = Job()
-                new_draft.owner = current_job.owner
-                new_draft.job_list_type = current_job.job_list_type
-                new_draft.status = Job.STATUS.draft
-                new_draft.job_rate = current_job.job_rate
-                new_draft.promotion_banner = current_job.promotion_banner
-                new_draft.title = current_job.title
-                new_draft.detail = current_job.detail
-                new_draft.time_of_release = current_job.time_of_release
-                new_draft.short_description = current_job.short_description
-                if current_job.support_image.all():
-                    for image in current_job.support_image:
-                        SupportImage.objects.create(job=new_draft, image=image.image)
-                new_draft.postal_code = current_job.postal_code
-                new_draft.keywords = current_job.keywords
-                new_draft.save()
-                return Response({'status': 'new draft job saved'})
-            else:
-                return Response({'status': 'action not supported'})
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+    # @detail_route(methods=['post'])
+    # def copy(self, request, pk=None):
+    #     """
+    #     copy the current job as a draft
+    #
+    #     """
+    #     serializer = ActionSerializer(data=request.data)
+    #     current_job = self.get_object()
+    #     if serializer.is_valid():
+    #         if serializer.data.pop('action') == AVAILABLE_ACTIONS['JOB_COPY']:
+    #             new_draft = Job()
+    #             new_draft.owner = current_job.owner
+    #             new_draft.job_list_type = current_job.job_list_type
+    #             new_draft.status = Job.STATUS.draft
+    #             new_draft.job_rate = current_job.job_rate
+    #             new_draft.promotion_banner = current_job.promotion_banner
+    #             new_draft.title = current_job.title
+    #             new_draft.detail = current_job.detail
+    #             new_draft.time_of_release = current_job.time_of_release
+    #             new_draft.short_description = current_job.short_description
+    #             if current_job.support_image.all():
+    #                 for image in current_job.support_image:
+    #                     SupportImage.objects.create(job=new_draft, image=image.image)
+    #             new_draft.postal_code = current_job.postal_code
+    #             new_draft.keywords = current_job.keywords
+    #             new_draft.save()
+    #             return Response({'status': 'new draft job saved'})
+    #         else:
+    #             return Response({'status': 'action not supported'})
+    #     else:
+    #         return Response(serializer.errors,
+    #                         status=status.HTTP_400_BAD_REQUEST)
 
     def perform_destroy(self, instance):
         """

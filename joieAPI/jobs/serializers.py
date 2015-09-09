@@ -124,7 +124,8 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
     """
     Jobs expose to joie
     """
-    owner = serializers.StringRelatedField()
+    # owner = serializers.StringRelatedField()
+    owner = EmployerMeSerializer(read_only=True)
     job_list_type = serializers.SlugRelatedField(read_only=True, slug_field='description')
     applicants = serializers.SerializerMethodField(method_name='get_application_number')
     support_image = SupportImageSerializer(many=True, required=False)

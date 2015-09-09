@@ -123,7 +123,7 @@ class CompanySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100, required=True, validators=[validators.UniqueValidator(queryset=Company.objects.all())])
     roc = serializers.CharField(max_length=40, required=True)
     business_type = serializers.ChoiceField(choices=[('Direct', 'Direct'), ('Agency', 'Agency')], required=True)
-    ea = serializers.CharField(max_length=40, required=True)
+    ea = serializers.CharField(max_length=40, allow_null=True, required=False)
     credit_amount = serializers.FloatField(required=True)
 
     class Meta:
@@ -136,6 +136,9 @@ class CompanySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         industry_name = validated_data.pop('industry')
         industry = Industry.objects.get(name=industry_name)
+        if validated_data['business_type'] == 'Agency':
+            if 'ea' not in validated_data or not validated_data['ea']:
+                raise serializers.ValidationError('EA is Mandatory for Agency Type.')
         company = Company.objects.create(industry=industry, **validated_data)
         return company
 
@@ -146,6 +149,13 @@ class CompanySerializer(serializers.ModelSerializer):
         # deleting the image because has a None value
         if 'image' in validated_data and not validated_data['image']:
             validated_data.pop('image')
+        if 'ea' in validated_data and not validated_data['ea']:
+            if instance.business_type == 'Agency' or validated_data['business_type'] == 'Agency':
+                raise serializers.ValidationError('EA is Mandatory for Agency Type.')
+        if 'business_type' in validated_data:
+            if instance.business_type == 'Agency' or validated_data['business_type'] == 'Agency':
+                if not instance.ea and not validated_data['ea']:
+                    raise serializers.ValidationError('EA is Mandatory for Agency Type.')
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -159,8 +169,8 @@ class CompanyMeSerializer(CompanySerializer):
 
 class BaseEmployerSerializer(serializers.HyperlinkedModelSerializer):
     """
-    BaseEmployerSerializer for admin user.
-    admin user can update all of the necessary fields
+    BaseEmployerSerializer for super admin user.
+    super admin user can update all of the necessary fields
     """
 
     user = AccountSerializer(required=True)
@@ -180,6 +190,30 @@ class BaseEmployerSerializer(serializers.HyperlinkedModelSerializer):
         return instance
 
 
+class EmployerAdminSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    for admin user.
+    super admin user can update all of the necessary fields
+    """
+
+    user = AccountSerializer(required=True)
+    company = CompanyMeSerializer(required=True)
+
+    class Meta:
+        model = Employer
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.get('user', None)
+        company_data = validated_data.get('company', None)
+        if user_data:
+            instance.user = AccountSerializer().update(instance.user, user_data)
+        if company_data:
+            instance.company = CompanyMeSerializer().update(instance.company, company_data)
+        instance.save()
+        return instance
+
+
+
 class EmployerMeSerializer(BaseEmployerSerializer):
     """
     For /me viewset
@@ -187,6 +221,16 @@ class EmployerMeSerializer(BaseEmployerSerializer):
     """
     user = AccountMeSerializer(required=True)
     company = CompanyMeSerializer(required=True)
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.get('user', None)
+        company_data = validated_data.get('company', None)
+        if user_data:
+            instance.user = AccountMeSerializer().update(instance.user, user_data)
+        if company_data:
+            instance.company = CompanyMeSerializer().update(instance.company, company_data)
+        instance.save()
+        return instance
 
 
 class FinancialSerializer(serializers.ModelSerializer):

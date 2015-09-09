@@ -193,7 +193,7 @@ class Company(models.Model):
     ea = models.CharField(max_length=40, blank=True)
     address = models.CharField(max_length=100, blank=True)
     postal_code = models.IntegerField(blank=True, null=True)
-    description = models.CharField(max_length=100, blank=True)
+    description = models.TextField(blank=True)
     # company_contact_person = models.CharField(max_length=40, blank=True)
     contact = models.CharField(max_length=100, blank=True)
     logo = models.ImageField(upload_to='logo', max_length=100, blank=True, null=True)

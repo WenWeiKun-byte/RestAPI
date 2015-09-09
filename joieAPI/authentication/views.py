@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from rest_framework import filters, response, status
 from rest_framework import viewsets
 from rest_framework import mixins, generics, permissions
+from rest_framework.response import Response
 from rest_framework.test import APIClient
 from rest_framework.exceptions import PermissionDenied
 from djoser import utils
@@ -11,7 +12,7 @@ from djoser.views import RegistrationView
 
 from .serializers import AccountAdminSerializer, BaseJOIESerializer, JOIEAdminSerializer, \
     BaseEmployerSerializer, EmployerMeSerializer, JOIEMESerializer, \
-    UserRegistrationSerializer, StaffRegistrationSerializer, IndustrySerializer
+    UserRegistrationSerializer, StaffRegistrationSerializer, IndustrySerializer, EmployerAdminSerializer
 from .models import Employer, JOIE, User, Industry, Company
 from .permissions import IsActiveUser, IsSuperAdmin, IsAccountOwner, IsAdmin, IsAvailableUser
 
@@ -97,6 +98,7 @@ class EmployerViewSet(NoCreateViewSet):
 
     permission_classes = (
         permissions.IsAuthenticated,
+        IsAdmin
     )
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter, )
@@ -107,7 +109,7 @@ class EmployerViewSet(NoCreateViewSet):
         if self.request.user.is_admin:
             if self.request.user.is_superAdmin:
                 return BaseEmployerSerializer
-            return BaseEmployerSerializer
+            return EmployerAdminSerializer
         else:
             raise PermissionDenied
 
