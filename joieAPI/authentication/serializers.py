@@ -123,7 +123,7 @@ class CompanySerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=100, required=True, validators=[validators.UniqueValidator(queryset=Company.objects.all())])
     roc = serializers.CharField(max_length=40, required=True)
     business_type = serializers.ChoiceField(choices=[('Direct', 'Direct'), ('Agency', 'Agency')], required=True)
-    ea = serializers.CharField(max_length=40, allow_null=True, required=False)
+    ea = serializers.CharField(max_length=40, required=False, allow_null=True, allow_blank=True)
     credit_amount = serializers.FloatField(required=True)
 
     class Meta:

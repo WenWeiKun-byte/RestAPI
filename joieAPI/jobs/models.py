@@ -31,6 +31,18 @@ class JobListType(models.Model):
         db_table = 'joie_job_list_type'
 
 
+class SupportImage(models.Model):
+    image_1 = models.ImageField(upload_to='support', blank=True, null=True)
+    image_2 = models.ImageField(upload_to='support', blank=True, null=True)
+    image_3 = models.ImageField(upload_to='support', blank=True, null=True)
+    image_4 = models.ImageField(upload_to='support', blank=True, null=True)
+    image_5 = models.ImageField(upload_to='support', blank=True, null=True)
+    image_6 = models.ImageField(upload_to='support', blank=True, null=True)
+
+    class Meta:
+        db_table = 'joie_job_support_image'
+
+
 class Job(JOIEUtil, models.Model):
     """
     Created by Employers
@@ -63,6 +75,7 @@ class Job(JOIEUtil, models.Model):
     # release date will not accurate to Time, easy for cronjob
     time_of_release = models.DateField(blank=True, null=True)
     # Empty field will denotes job be published indefinitely.
+    support_image = models.OneToOneField(SupportImage, blank=True, null=True, related_name='job')
 
     class Meta:
         db_table = 'joie_job'
@@ -88,10 +101,3 @@ class Application(models.Model):
     class Meta:
         db_table = 'joie_application'
 
-
-class SupportImage(models.Model):
-    image = models.ImageField()
-    job = models.ForeignKey(Job, related_name='support_image')
-
-    class Meta:
-        db_table = 'joie_job_support_image'

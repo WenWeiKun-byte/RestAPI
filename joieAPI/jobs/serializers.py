@@ -33,6 +33,13 @@ class JobListTypeSerializer(serializers.Serializer):
 
 
 class SupportImageSerializer(serializers.ModelSerializer):
+    image_1 = ImageField(allow_null=True, required=False)
+    image_2 = ImageField(allow_null=True, required=False)
+    image_3 = ImageField(allow_null=True, required=False)
+    image_4 = ImageField(allow_null=True, required=False)
+    image_5 = ImageField(allow_null=True, required=False)
+    image_6 = ImageField(allow_null=True, required=False)
+
     class Meta:
         model = SupportImage
 
@@ -46,7 +53,7 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.StringRelatedField()
     job_list_type = ModelChoiceField(choices=JobListType.objects.all().values_list('list_type', flat=True))
     promotion_banner = ImageField(allow_null=True, required=False)
-    support_image = SupportImageSerializer(many=True, required=False)
+    support_image = SupportImageSerializer(required=False)
 
     class Meta:
         model = Job
@@ -65,26 +72,32 @@ class JobDraftSerializer(serializers.HyperlinkedModelSerializer):
         owner = Employer.objects.get(user=owner_user)
         job = Job.objects.create(owner=owner, job_list_type=job_list_type, **validated_data)
         if support_images:
-            if len(support_images) > 6:
-                raise serializers.ValidationError('May upload up to 6 support images')
-            for support_image in support_images:
-                SupportImage.objects.create(job=job, **support_image)
+            # if len(support_images) > 6:
+            #     raise serializers.ValidationError('May upload up to 6 support images')
+            # for support_image in support_images:
+            #     SupportImage.objects.create(job=job, **support_image)
+            job.support_image = SupportImage.objects.create(**support_images)
+            job.save()
+
         return job
 
     def update(self, instance, validated_data):
         job = instance
         job_type_name = validated_data.pop('job_list_type', None)
         time_of_release = validated_data.get('time_of_release', None)
-        support_images = validated_data.pop('support_image', 'empty')
-        if support_images and support_images != 'empty':
-            SupportImage.objects.filter(job=job).delete()
-            if len(support_images) > 6:
-                raise serializers.ValidationError('May upload up to 6 support images')
-            for support_image_data in support_images:
-                SupportImage.objects.create(job=job, **support_image_data)
-        elif support_images != 'empty':
-            # got the key and the value is null, means the use want to remove the values
-            SupportImage.objects.filter(job=job).delete()
+        # support_images = validated_data.pop('support_image', 'empty')
+        support_images = validated_data.pop('support_image', None)
+        # if support_images and support_images != 'empty':
+        #     SupportImage.objects.filter(job=job).delete()
+        #     if len(support_images) > 6:
+        #         raise serializers.ValidationError('May upload up to 6 support images')
+        #     for support_image_data in support_images:
+        #         SupportImage.objects.create(job=job, **support_image_data)
+        # elif support_images != 'empty':
+        #     # got the key and the value is null, means the use want to remove the values
+        #     SupportImage.objects.filter(job=job).delete()
+        if support_images:
+            job.support_image = SupportImageSerializer().update(instance.support_image, support_images)
         if time_of_release is not None and time_of_release < date.today():
             raise serializers.ValidationError('the release date must be today or a future date')
         if job_type_name:

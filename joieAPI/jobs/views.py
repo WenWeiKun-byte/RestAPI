@@ -8,7 +8,7 @@ from rest_framework_extensions.mixins import NestedViewSetMixin
 
 from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer, JobSerializer, \
     ApplicationEmpSerializer, ApplicationJOIESerializer
-from jobs.models import JobListType, Job, Employer, JOIE, Application, SupportImage
+from jobs.models import JobListType, Job, Employer, JOIE, Application
 from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS, ReadDestroyViewSet
 from authentication.permissions import IsAdmin, IsEmployer, IsJOIE, IsActiveUser, IsApplicationOwner
 from authentication.serializers import JOIEMESerializer
@@ -73,9 +73,10 @@ class DraftJobViewSet(viewsets.ModelViewSet):
                 job_to_publish.detail = draft_job.detail
                 job_to_publish.time_of_release = draft_job.time_of_release
                 job_to_publish.short_description = draft_job.short_description
-                if job_to_publish.support_image.all():
-                    for image in draft_job.support_image:
-                        SupportImage.objects.create(job=draft_job, image=image.image)
+                # if job_to_publish.support_image.all():
+                #     for image in draft_job.support_image:
+                #         SupportImage.objects.create(job=draft_job, image=image.image)
+                job_to_publish.support_image = draft_job.support_image
                 job_to_publish.postal_code = draft_job.postal_code
                 job_to_publish.keywords = draft_job.keywords
                 job_to_publish.save()
