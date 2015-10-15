@@ -13,6 +13,7 @@ class CoyJOIEDB(models.Model):
     company = models.OneToOneField(Company)
     joie = models.OneToOneField(JOIE)
     job_rate = models.FloatField()
+    multiple_job_rates = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'joie_coy_joie_db'
@@ -20,6 +21,12 @@ class CoyJOIEDB(models.Model):
     # for ModelChoiceField use
     def get_name(self):
         return self.company.name
+
+    def get_job_rate(self):
+        if self.multiple_job_rates:
+            return "%s+" % self.job_rate
+        else:
+            return self.job_rate
 
 
 class FeedBack(models.Model):

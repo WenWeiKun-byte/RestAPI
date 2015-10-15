@@ -10,14 +10,20 @@ class FeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeedBack
 
+
 class CoyJOIEDBSerializer(serializers.HyperlinkedModelSerializer):
 
     company = serializers.StringRelatedField(read_only=True)  # we need the name only
     joie = serializers.EmailField(required=True)  # joie's email
+    job_rate = serializers.SerializerMethodField()
+
 
     class Meta:
         model = CoyJOIEDB
         extra_kwargs = {'url': {'view_name': 'joiedb-detail'}}
+
+    def get_job_rate(self, obj):
+        return obj.get_job_rate()
 
     def create(self, validated_data):
         joie_email = validated_data.pop('joie')

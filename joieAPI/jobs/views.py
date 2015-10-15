@@ -127,6 +127,8 @@ class JobViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = JobSerializer
     queryset = Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today)
 
+    filter_backends = (filters.DjangoFilterBackend, )
+    filter_fields = ('owner__company__name',)
     @detail_route(methods=['post'], permission_classes=[IsJOIE])
     def apply(self, request, pk=None):
         """
@@ -185,7 +187,8 @@ class ApplicationEmpViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
                     company = current_app.job.owner.company
                     joie = current_app.applicant
                     job_rate = current_app.job.job_rate
-                    CoyJOIEDB.objects.get_or_create(company=company, joie=joie, job_rate=job_rate)
+                    multiple_job_rates = current_app.job.multiple_job_rates
+                    CoyJOIEDB.objects.get_or_create(company=company, joie=joie, job_rate=job_rate, multiple_job_rates=multiple_job_rates)
                     return Response({'status': 'application approve successfully'})
                 else:
                     return Response({'status': 'it is not a pending application'})
