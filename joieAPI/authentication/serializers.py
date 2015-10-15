@@ -120,7 +120,7 @@ class CompanySerializer(serializers.ModelSerializer):
     logo = ImageField(allow_null=True, required=False)
 
     # required fields
-    name = serializers.CharField(max_length=100, required=True, validators=[validators.UniqueValidator(queryset=Company.objects.all())])
+    name = serializers.CharField(max_length=100, required=True)
     roc = serializers.CharField(max_length=40, required=True)
     business_type = serializers.ChoiceField(choices=[('Direct', 'Direct'), ('Agency', 'Agency')], required=True)
     ea = serializers.CharField(max_length=40, required=False, allow_null=True, allow_blank=True)
@@ -143,6 +143,10 @@ class CompanySerializer(serializers.ModelSerializer):
         return company
 
     def update(self, instance, validated_data):
+        name = validated_data.get('name')
+        filter_set = Company.objects.filter(name=name).exclude(pk=instance.pk)
+        if filter_set.exists():
+            raise validators.ValidationError('company name must be unique.')
         industry_name = validated_data.pop('industry', instance.industry)
         industry = Industry.objects.get(name=industry_name)
         instance.industry = industry
