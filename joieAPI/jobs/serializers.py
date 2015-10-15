@@ -121,7 +121,7 @@ class JobActiveSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.StringRelatedField()
     job_list_type = serializers.SlugRelatedField(read_only=True, slug_field='description')
     applicants = serializers.SerializerMethodField(method_name='get_application_number')
-    support_image = SupportImageSerializer(many=True, required=False)
+    support_image = SupportImageSerializer(required=False)
 
     class Meta:
         model = Job
@@ -141,15 +141,20 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):
     owner = EmployerMeSerializer(read_only=True)
     job_list_type = serializers.SlugRelatedField(read_only=True, slug_field='description')
     applicants = serializers.SerializerMethodField(method_name='get_application_number')
-    support_image = SupportImageSerializer(many=True, required=False)
+    job_rate = serializers.SerializerMethodField()
+    support_image = SupportImageSerializer(required=False)
 
     class Meta:
         model = Job
         exclude = ('create_at', 'create_by', 'update_at', 'update_by', 'status')
-        read_only_fields = ('owner', 'applicants', 'time_of_publish', 'time_of_release')
+        read_only_fields = ('owner', 'applicants', 'time_of_publish', 'time_of_release', 'job_rate')
 
     def get_application_number(self, obj):
         return obj.get_applicant_number()
+
+    def get_job_rate(self, obj):
+        return obj.get_job_rate()
+
 
 
 class ApplicationEmpSerializer(serializers.ModelSerializer):

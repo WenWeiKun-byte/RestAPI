@@ -76,6 +76,7 @@ class Job(JOIEUtil, models.Model):
     time_of_release = models.DateField(blank=True, null=True)
     # Empty field will denotes job be published indefinitely.
     support_image = models.OneToOneField(SupportImage, blank=True, null=True, related_name='job')
+    multiple_job_rates = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'joie_job'
@@ -85,6 +86,13 @@ class Job(JOIEUtil, models.Model):
 
     def get_applicant_number(self):
         return self.applicants.count()
+
+    def get_job_rate(self):
+        if self.multiple_job_rates:
+            return "%s+" % self.job_rate
+        else:
+            return self.job_rate
+
 
 
 class Application(models.Model):

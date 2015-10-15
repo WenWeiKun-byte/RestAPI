@@ -8,7 +8,7 @@ from rest_framework_extensions.mixins import NestedViewSetMixin
 
 from jobs.serializers import JobListTypeSerializer, JobDraftSerializer, JobActiveSerializer, JobSerializer, \
     ApplicationEmpSerializer, ApplicationJOIESerializer
-from jobs.models import JobListType, Job, Employer, JOIE, Application
+from jobs.models import JobListType, Job, Employer, JOIE, Application, SupportImage
 from joieAPI.adhoc import ActionSerializer, AVAILABLE_ACTIONS, ReadDestroyViewSet
 from authentication.permissions import IsAdmin, IsEmployer, IsJOIE, IsActiveUser, IsApplicationOwner
 from authentication.serializers import JOIEMESerializer
@@ -76,9 +76,13 @@ class DraftJobViewSet(viewsets.ModelViewSet):
                 # if job_to_publish.support_image.all():
                 #     for image in draft_job.support_image:
                 #         SupportImage.objects.create(job=draft_job, image=image.image)
-                job_to_publish.support_image = draft_job.support_image
+                support_image = SupportImage.objects.get(pk=draft_job.support_image.pk)
+                support_image.pk = None
+                support_image.save()
+                job_to_publish.support_image = support_image
                 job_to_publish.postal_code = draft_job.postal_code
                 job_to_publish.keywords = draft_job.keywords
+                job_to_publish.multiple_job_rates = draft_job.multiple_job_rates
                 job_to_publish.save()
                 return Response({'status': 'job published'})
             else:
@@ -108,39 +112,6 @@ class ActiveJobViewSet(NestedViewSetMixin, ReadDestroyViewSet):
         user = self.request.user
         emp = Employer.objects.get(user=user)
         return Job.objects.filter(status=Job.STATUS.active, time_of_release__gt=date.today, owner=emp)
-
-    # @detail_route(methods=['post'])
-    # def copy(self, request, pk=None):
-    #     """
-    #     copy the current job as a draft
-    #
-    #     """
-    #     serializer = ActionSerializer(data=request.data)
-    #     current_job = self.get_object()
-    #     if serializer.is_valid():
-    #         if serializer.data.pop('action') == AVAILABLE_ACTIONS['JOB_COPY']:
-    #             new_draft = Job()
-    #             new_draft.owner = current_job.owner
-    #             new_draft.job_list_type = current_job.job_list_type
-    #             new_draft.status = Job.STATUS.draft
-    #             new_draft.job_rate = current_job.job_rate
-    #             new_draft.promotion_banner = current_job.promotion_banner
-    #             new_draft.title = current_job.title
-    #             new_draft.detail = current_job.detail
-    #             new_draft.time_of_release = current_job.time_of_release
-    #             new_draft.short_description = current_job.short_description
-    #             if current_job.support_image.all():
-    #                 for image in current_job.support_image:
-    #                     SupportImage.objects.create(job=new_draft, image=image.image)
-    #             new_draft.postal_code = current_job.postal_code
-    #             new_draft.keywords = current_job.keywords
-    #             new_draft.save()
-    #             return Response({'status': 'new draft job saved'})
-    #         else:
-    #             return Response({'status': 'action not supported'})
-    #     else:
-    #         return Response(serializer.errors,
-    #                         status=status.HTTP_400_BAD_REQUEST)
 
     def perform_destroy(self, instance):
         """
